@@ -5,6 +5,7 @@
 #include <exception>
 #include <string>
 #include <initializer_list>
+#include <vector>
 
 namespace gl {
 	class with_name {
@@ -29,6 +30,7 @@ namespace gl {
 	class program;
 	class shader;
 	class texture;
+	class texture2d;
 
 	class context {
 	public:
@@ -43,7 +45,10 @@ namespace gl {
 	}
 
 	enum buffer_target : GLenum {
-		array_buffer = GL_ARRAY_BUFFER
+		array_buffer = GL_ARRAY_BUFFER,
+		element_array_buffer = GL_ELEMENT_ARRAY_BUFFER,
+		pixel_pack_buffer = GL_PIXEL_PACK_BUFFER,
+		pixel_unpack_buffer = GL_PIXEL_UNPACK_BUFFER
 	};
 	enum buffer_usage : GLenum {
 		static_draw = GL_STATIC_DRAW
@@ -51,6 +56,7 @@ namespace gl {
 
 	class buffer : public gennable, public bindable {
 		friend vertex_array;
+		friend texture2d;
 	protected:
 		const buffer_target target;
 		void bind() override { glBindBuffer(target, name); }
@@ -93,18 +99,19 @@ namespace gl {
 	};
 
 	enum internal_format:GLint {
-		RGBA8 = GL_RGBA8
+		rgba8 = GL_RGBA8
 	};
 
 	enum pixel_format:GLenum {
-		RGBA = GL_RGBA
+		rgba = GL_RGBA
 	};
 
 	enum pixel_type:GLenum {
-		UBYTE = GL_UNSIGNED_BYTE
+		ubyte = GL_UNSIGNED_BYTE
 	};
 
 	class texture : public gennable, public bindable {
+		void gen() override { glGenTextures(1, &name); }
 	public:
 		void bind() override {glBindTexture(target, name);}
 
@@ -113,23 +120,29 @@ namespace gl {
 			bind();
 		}
 		GLenum target;
-	protected:
-		void gen() override {glGenTextures(1, &name);}
 	};
 
 	class texture2d : public texture {
-
 	public:
 		texture2d():texture(GL_TEXTURE_2D){}
 
-		void image(internal_format if_, GLsizei w, GLsizei h, pixel_format pf, pixel_type pt, void* pntr) {
+		template<class T>
+		void image(internal_format if_, GLsizei w, GLsizei h, pixel_format pf, pixel_type pt, std::vector<T> data) {
 			bind();
-			glTexImage2D(GL_TEXTURE_2D, 0, if_, w, h, 0, pf, pt, pntr);
+			glTexImage2D(GL_TEXTURE_2D, 0, if_, w, h, 0, pf, pt, data.data());
 		}
 
-		void sub_image(GLint level, GLint xoff, GLint yoff, GLsizei w, GLsizei h, pixel_format pf, pixel_type pt, void* pntr) {
+		template<class T>
+		void sub_image(GLint level, GLint xoff, GLint yoff, GLsizei w, GLsizei h, pixel_format pf, pixel_type pt, std::vector<T> data) {
 			bind();
-			glTexSubImage2D(GL_TEXTURE_2D, level, xoff, yoff, w, h, pf, pt, pntr);
+			glBindBuffer(pixel_unpack_buffer, 0);
+			glTexSubImage2D(GL_TEXTURE_2D, level, xoff, yoff, w, h, pf, pt, data.data());
+		}
+
+		void sub_image(buffer buff, GLint level, GLint xoff, GLint yoff, GLsizei w, GLsizei h, pixel_format pf, pixel_type pt) {
+			bind();
+			buff.bind();
+			glTexSubImage2D(GL_TEXTURE_2D, level, xoff, yoff, w, h, pf, pt, nullptr);
 		}
 
 		void storage(GLsizei levels, internal_format if_, GLsizei w, GLsizei h) {
@@ -141,6 +154,29 @@ namespace gl {
 	class texture_rect :public texture2d {
 	public:
 		texture_rect() :texture2d() {}
+	};
+
+	/*enum sampler_parameter :GLenum {
+		texture_wrap_s
+	};*/
+	/*enum tex_coord:GLuint {
+		s = 1,
+		t = 1 << 1,
+		p = 1 << 2,
+		q = 1 << 3
+	};*/
+	enum wrap_mode :GLenum {
+		clamp_to_border = GL_CLAMP_TO_BORDER,
+		clamp_to_edge = GL_CLAMP_TO_EDGE,
+		repeat = GL_REPEAT
+	};
+
+	class sampler :public gennable {
+		void gen() override { glGenSamplers(1, &name); }
+
+		void texture_wrap_s(wrap_mode wm) {glSamplerParameteri(name, GL_TEXTURE_WRAP_S, wm);}
+		void texture_wrap_t(wrap_mode wm) {glSamplerParameteri(name, GL_TEXTURE_WRAP_T, wm);}
+		void texture_wrap_r(wrap_mode wm) { glSamplerParameteri(name, GL_TEXTURE_WRAP_R, wm); }
 	};
 
 	class shader_compilation_error : public std::exception {
@@ -234,6 +270,13 @@ namespace gl {
 
 		glDrawArrays(pt, start, count);
 
+	}
+
+	template<class T>
+	void debug_message_callback(
+		void(f)(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam),
+		std::vector<T> userParam) {
+		glDebugMessageCallback(f, userParam.data());
 	}
 }
 

@@ -49,7 +49,8 @@ int main() {
 
 	debug("Bimo png loaded");
 	texture2d tex;
-	tex.image(internal_format::RGBA8, w, h, pixel_format::RGBA, pixel_type::UBYTE, bts.data());
+	tex.storage(1, internal_format::rgba8, w, h);
+	tex.sub_image(0, 0, 0, w, h, pixel_format::rgba, pixel_type::ubyte, bts);
 
 	debug("Bimo loaded to va");
 
@@ -90,12 +91,6 @@ int main() {
 	vertex_array vao;
 	vao.vertex_attrib_pointer(pr.attrib_location("pos"), 2, GL_FLOAT, false, verts);
 	vao.enable_vertex_attrib_array(pr.attrib_location("pos"));
-
-	tex.bind();
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	while (!glfwWindowShouldClose(window)) {
 		glClear(GL_COLOR_BUFFER_BIT);
