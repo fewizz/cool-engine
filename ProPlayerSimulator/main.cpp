@@ -91,7 +91,7 @@ int main() {
 	vao.enable_vertex_attrib_array(pr.attrib_location("pos"));
 
 	while (!glfwWindowShouldClose(window)) {
-		clear();
+		clear({color_buffer});
 		draw_arrays(primitive_type::triangles, 0, 6, pr, vao, { {0, tex} });
 		glfwSwapBuffers(window);
 		glfwPollEvents();

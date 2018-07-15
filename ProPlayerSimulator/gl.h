@@ -79,17 +79,17 @@ namespace gl {
 		void bind() override { gl_bind(target, *name); };
 		void gen() override;
 	public:
+		buffer(buffer_target tar) :target{ tar } {
+			gen();
+			bind();
+		}
+
 		void del() override;
 		void data(size_t bytes, const void * data, buffer_usage usage);
 
 		template<class T>
 		void data(std::initializer_list<T> lst, buffer_usage usage) {
 			data(sizeof(T)*lst.size(), lst.begin(), usage);
-		}
-
-		buffer(buffer_target tar):target{tar} {
-			gen();
-			bind();
 		}
 	};
 
@@ -124,10 +124,6 @@ namespace gl {
 	enum pixel_format:unsigned {
 		rgba = 0x1908
 	};
-
-	/*enum pixel_type:unsigned {
-		ubyte = 0x1401
-	};*/
 
 	enum texture_target :unsigned {
 		texture_2d = 0x0DE1
@@ -281,8 +277,12 @@ namespace gl {
 		void(f)(message_source source, message_type type, unsigned id, message_severity severity, unsigned length,
 			const char* message, const void* userParam));
 
+	enum clear_buffer: unsigned {
+		color_buffer = 0x00004000,
+		depth_buffer = 0x00000100
+	};
 	void clear_color(float r, float g, float b, float a);
-	void clear();
+	void clear(std::initializer_list<clear_buffer> mask);
 }
 
 

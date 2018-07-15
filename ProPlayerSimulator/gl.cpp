@@ -120,7 +120,10 @@ namespace gl {
 		glClearColor(r, g, b, a);
 	}
 
-	void clear() {
-		glClear(GL_COLOR_BUFFER_BIT);
+	void clear(std::initializer_list<clear_buffer> mask) {
+		unsigned r = 0;
+		for (auto x : mask)
+			r |= x;
+		glClear(r);
 	}
 }
