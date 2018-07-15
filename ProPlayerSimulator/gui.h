@@ -3,17 +3,15 @@
 
 namespace gui {
 
-	template<typedef T>
+	template<class T>
 	class position {
 	public:
 		virtual T get() = 0;
 	};
 
-	template<typedef T>
+	template<class T>
 	class relative_position : public virtual position<T> {
 		position* base;
-
-
 	};
 
 	class interface_element {
@@ -22,16 +20,16 @@ namespace gui {
 		virtual void render() = 0;
 	};
 
-	template<typedef T>
-	class positioned_interface_element:interface_element {
+	template<class T>
+	class positioned_interface_element:public interface_element {
 		position<T> pos;
 	};
 
 	class screen:public interface_element {
-		std::vector<interface_element&> childs;
+		std::vector<interface_element> childs;
 
 	public:
-		std::vector<interface_element&>& getChilds() { return childs; }
+		std::vector<interface_element>& getChilds() { return childs; }
 
 		void update() {
 			for (auto &c : childs)
@@ -44,9 +42,11 @@ namespace gui {
 		}
 	};
 
-	class button : interface_element {
+	template<class Pos, class Dim>
+	class rectangle_button : public positioned_interface_element<Pos> {
+	public :
 		bool active;
-
+		Dim dim;
 
 	};
 }

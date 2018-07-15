@@ -1,36 +1,48 @@
 #ifndef GL_WRAP_H
 #define GL_WRAP_H
 
-#include "GL/glew.h"
 #include <exception>
 #include <string>
 #include <initializer_list>
 #include <vector>
 
+//#define DEST(cname) ~cname() {if(name)del();}
 namespace gl {
 	class with_name {
 	public:
-		GLuint name;
+		unsigned* name = nullptr;
+		virtual void del() {}
+		virtual ~with_name() {
+			if (name)
+				this->del();
+		}
 	};
-
 	class bindable:virtual public with_name {
 	protected:
 		virtual void bind() = 0;
+		//virtual ~bindable() = 0;
 	};
 	class gennable:virtual public with_name {
 	protected:
 		virtual void gen() = 0;
+		//virtual ~gennable() = 0;
 	};
 	class creatable:virtual public with_name {
 	protected:
 		virtual void create() = 0;
+		//virtual ~creatable() = 0;
 	};
-
 	class vertex_array;
 	class program;
 	class shader;
 	class texture;
 	class texture2d;
+
+	enum class types:unsigned{
+		type_byte = 0x1400,
+		type_ubyte = 0x1401,
+		type_short = 0x1402
+	};
 
 	class context {
 	public:
@@ -40,18 +52,16 @@ namespace gl {
 		}*/
 	};
 
-	context* wrap_context() {
-		return new context();
-	}
+	context* wrap_context();
 
-	enum buffer_target : GLenum {
-		array_buffer = GL_ARRAY_BUFFER,
-		element_array_buffer = GL_ELEMENT_ARRAY_BUFFER,
-		pixel_pack_buffer = GL_PIXEL_PACK_BUFFER,
-		pixel_unpack_buffer = GL_PIXEL_UNPACK_BUFFER
+	enum buffer_target : unsigned {
+		array_buffer = 0x8892,
+		element_array_buffer = 0x8893,
+		pixel_pack_buffer = 0x88EB,
+		pixel_unpack_buffer = 0x88EC
 	};
-	enum buffer_usage : GLenum {
-		static_draw = GL_STATIC_DRAW
+	enum buffer_usage : unsigned {
+		static_draw = 0x88E4
 	};
 
 	class buffer : public gennable, public bindable {
@@ -59,13 +69,11 @@ namespace gl {
 		friend texture2d;
 	protected:
 		const buffer_target target;
-		void bind() override { glBindBuffer(target, name); }
-		void gen() override { glGenBuffers(1, &name); }
+		void bind() override;
+		void gen() override;
 	public:
-		void data(size_t bytes, const void * data, buffer_usage usage) { 
-			bind();
-			glBufferData(target, bytes, data, usage);
-		}
+		void del() override;
+		void data(size_t bytes, const void * data, buffer_usage usage);
 
 		template<class T>
 		void data(std::initializer_list<T> lst, buffer_usage usage) {
@@ -78,77 +86,68 @@ namespace gl {
 		}
 	};
 
+	enum vertex_attrib_pointer_type :unsigned {
+	};
+
 	class vertex_array : public gennable, public bindable {
-		void gen() override { glGenVertexArrays(1, &name); }
+		void gen() override;
 	public:
-		void bind() override { glBindVertexArray(name); }
+		void bind() override;
+		void del() override;
 		vertex_array() {
 			gen();
 			bind();
 		}
 
-		void vertex_attrib_pointer(GLuint index, GLint size, GLenum type, GLboolean normalized, buffer buff/*, std::initializer_list<T>data*/) {
-			bind();
-			buff.bind();
-			glVertexAttribPointer(index, size, type, normalized, 0, nullptr);
-		}
-		void enable_vertex_attrib_array(GLuint index) {
-			bind();
-			glEnableVertexAttribArray(index);
-		}
+		template<class T, int size>
+		void vertex_attrib_pointer(buffer& buff, unsigned index, bool normalized = false);
+
+		void enable_vertex_attrib_array(unsigned index);
 	};
 
-	enum internal_format:GLint {
-		rgba8 = GL_RGBA8
+	enum internal_format:unsigned {
+		rgba8 = 0x8058
 	};
 
-	enum pixel_format:GLenum {
-		rgba = GL_RGBA
+	enum pixel_format:unsigned {
+		rgba = 0x1908
 	};
 
-	enum pixel_type:GLenum {
-		ubyte = GL_UNSIGNED_BYTE
+	/*enum pixel_type:unsigned {
+		ubyte = 0x1401
+	};*/
+
+	enum texture_target :unsigned {
+		texture_2d = 0x0DE1
 	};
 
 	class texture : public gennable, public bindable {
-		void gen() override { glGenTextures(1, &name); }
+		void gen() override;
 	public:
-		void bind() override {glBindTexture(target, name);}
+		void bind() override;
+		void del() override;
 
-		texture(GLenum _target):target{_target} {
+		texture(texture_target t):target{t} {
 			gen();
 			bind();
 		}
-		GLenum target;
-	};
+		texture_target target;
+	};       
 
 	class texture2d : public texture {
 	public:
-		texture2d():texture(GL_TEXTURE_2D){}
+		texture2d():texture(texture_target::texture_2d){}
 
 		template<class T>
-		void image(internal_format if_, GLsizei w, GLsizei h, pixel_format pf, pixel_type pt, std::vector<T> data) {
-			bind();
-			glTexImage2D(GL_TEXTURE_2D, 0, if_, w, h, 0, pf, pt, data.data());
-		}
+		void image(internal_format if_, unsigned w, unsigned h, pixel_format pf, std::vector<T> data);
 
 		template<class T>
-		void sub_image(GLint level, GLint xoff, GLint yoff, GLsizei w, GLsizei h, pixel_format pf, pixel_type pt, std::vector<T> data) {
-			bind();
-			glBindBuffer(pixel_unpack_buffer, 0);
-			glTexSubImage2D(GL_TEXTURE_2D, level, xoff, yoff, w, h, pf, pt, data.data());
-		}
+		void sub_image(unsigned level, unsigned xoff, unsigned yoff, unsigned w, unsigned h, pixel_format pf, std::vector<T> data);
 
-		void sub_image(buffer buff, GLint level, GLint xoff, GLint yoff, GLsizei w, GLsizei h, pixel_format pf, pixel_type pt) {
-			bind();
-			buff.bind();
-			glTexSubImage2D(GL_TEXTURE_2D, level, xoff, yoff, w, h, pf, pt, nullptr);
-		}
+		template<class T>
+		void sub_image(buffer& buff, unsigned level, unsigned xoff, unsigned yoff, unsigned w, unsigned h, pixel_format pf);
 
-		void storage(GLsizei levels, internal_format if_, GLsizei w, GLsizei h) {
-			bind();
-			glTexStorage2D(GL_TEXTURE_2D, levels, if_, w, h);
-		}
+		void storage(unsigned levels, internal_format if_, unsigned w, unsigned h);
 	};
 
 	class texture_rect :public texture2d {
@@ -165,18 +164,20 @@ namespace gl {
 		p = 1 << 2,
 		q = 1 << 3
 	};*/
-	enum wrap_mode :GLenum {
-		clamp_to_border = GL_CLAMP_TO_BORDER,
-		clamp_to_edge = GL_CLAMP_TO_EDGE,
-		repeat = GL_REPEAT
+	enum wrap_mode :unsigned {
+		clamp_to_border = 0x812D,
+		clamp_to_edge = 0x812F,
+		repeat = 0x2901
 	};
 
 	class sampler :public gennable {
-		void gen() override { glGenSamplers(1, &name); }
+		void gen() override;
 
-		void texture_wrap_s(wrap_mode wm) {glSamplerParameteri(name, GL_TEXTURE_WRAP_S, wm);}
-		void texture_wrap_t(wrap_mode wm) {glSamplerParameteri(name, GL_TEXTURE_WRAP_T, wm);}
-		void texture_wrap_r(wrap_mode wm) { glSamplerParameteri(name, GL_TEXTURE_WRAP_R, wm); }
+	public:
+		void del() override;
+		void texture_wrap_s(wrap_mode wm);
+		void texture_wrap_t(wrap_mode wm);
+		void texture_wrap_r(wrap_mode wm);
 	};
 
 	class shader_compilation_error : public std::exception {
@@ -187,45 +188,32 @@ namespace gl {
 		shader * const shader_obj;
 	};
 
-	enum shader_type :GLenum {
-		compute_shader = GL_COMPUTE_SHADER,
-		vertex_shader = GL_VERTEX_SHADER,
-		fragment_shader = GL_FRAGMENT_SHADER
+	enum shader_type :unsigned {
+		compute_shader = 0x91B9,
+		vertex_shader = 0x8B31,
+		fragment_shader = 0x8B30
 	};
 
 	class shader:public creatable {
 		friend program;
+	protected:
+		void create() override;
 	public:
+		void del() override;
 		const shader_type type;
 		shader(shader_type type):type{type} {create();}
 		shader(shader_type type, std::string src) :shader(type) { source(src); compile(); }
 
-		void source(std::string src) {
-			const char* s { src.c_str() };
-			glShaderSource(name, 1, &s, nullptr);
-		}
+		void source(std::string src);
 
-		void compile() { 
-			glCompileShader(name);
-			GLint i{};
-			GLint* status{ &i };
-			glGetShaderiv(name, GL_COMPILE_STATUS, status);
-			if (*status == GL_FALSE) {
-				GLint len;
-				glGetShaderiv(name, GL_INFO_LOG_LENGTH, &len);
-				char* mess = new char[len];
-				glGetShaderInfoLog(name, len, nullptr, mess);
-				throw shader_compilation_error(this, mess);
-			}
-		}
-	protected:
-		void create() override {name = glCreateShader(type);}
+		void compile();
 	};
 
 	class program :public creatable {
 	protected:
-		void create() override { name = glCreateProgram(); }
+		void create() override;
 	public:
+		void del() override;
 		program() { create(); }
 		program(std::initializer_list<std::pair<shader_type, char*>> init, 
 			void(errorh)(shader_compilation_error error) = [](shader_compilation_error err) {})
@@ -240,10 +228,10 @@ namespace gl {
 			catch (shader_compilation_error e) { errorh(e); }
 			link();
 		}
-		void attach(shader& sh) { glAttachShader(name, sh.name); }
-		void link() { glLinkProgram(name); }
-		void use() { glUseProgram(name); }
-		GLuint attrib_location(std::string attrib_name) { return glGetAttribLocation(name, attrib_name.c_str()); };
+		void attach(shader& sh);
+		void link();
+		void use();
+		unsigned attrib_location(std::string attrib_name);
 	};
 
 	class framebuffer : public gennable, public bindable {
@@ -253,31 +241,26 @@ namespace gl {
 		}
 	};
 
-	enum primitive_type :GLenum {
-		triangles = GL_TRIANGLES
+	enum primitive_type :unsigned {
+		triangles = 0x0004
 	};
 
-	void draw_arrays(primitive_type pt, GLint start, GLsizei count, program prog,
-		vertex_array vao, std::initializer_list<std::pair<GLuint, texture>> texture_units = {}) {
+	void draw_arrays(primitive_type pt, unsigned start, unsigned count, program prog,
+		vertex_array vao, std::initializer_list<std::pair<unsigned, texture>> texture_units = {});
 
-		prog.use();
-		vao.bind();
+	enum message_source :unsigned {
+	};
+	enum message_type :unsigned {
+	};
+	enum message_severity :unsigned {
+	};
 
-		for (auto p : texture_units) {
-			glActiveTexture(GL_TEXTURE0 + p.first);
-			p.second.bind();
-		}
-
-		glDrawArrays(pt, start, count);
-
-	}
-
-	template<class T>
 	void debug_message_callback(
-		void(f)(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam),
-		std::vector<T> userParam) {
-		glDebugMessageCallback(f, userParam.data());
-	}
+		void(f)(message_source source, message_type type, unsigned id, message_severity severity, unsigned length,
+			const char* message, const void* userParam));
+
+	void clear_color(float r, float g, float b, float a);
+	void clear();
 }
 
 

@@ -96,6 +96,8 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalIncludeDirectories>$(ProjectDir)libs;$(SolutionDir)BGFX\bgfx\include;$(SolutionDir)BGFX\bx\include;$(SolutionDir)BGFX\bimg\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp14</LanguageStandard>
+      <DisableLanguageExtensions>true</DisableLanguageExtensions>
+      <CompileAs>CompileAsCpp</CompileAs>
     </ClCompile>
     <Link>
       <AdditionalDependencies>opengl32.lib;glfw3.lib;glew32s.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -135,6 +137,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="gl.cpp" />
     <ClCompile Include="gui_gl.cpp" />
     <ClCompile Include="libs\lodepng.cpp" />
     <ClCompile Include="main.cpp" />
