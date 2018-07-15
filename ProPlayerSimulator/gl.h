@@ -9,8 +9,23 @@
 //#define DEST(cname) ~cname() {if(name)del();}
 namespace gl {
 	class with_name {
+	protected:
+		template<class T>
+		static unsigned constexpr gl_type_token() {
+			if (std::is_same_v<T, int8_t>)
+				return 0x1400;
+			if (std::is_same_v<T, uint8_t>)
+				return 0x1401;
+			if (std::is_same_v<T, int32_t>)
+				return 0x1404;
+			if (std::is_same_v<T, uint32_t>)
+				return 0x1405;
+			if (std::is_same_v<T, float_t>)
+				return 0x1406;
+			else throw std::exception("GL: can't find appr. type");
+		}
 	public:
-		unsigned* name = nullptr;
+		unsigned* name{ new unsigned{} };
 		virtual void del() {}
 		virtual ~with_name() {
 			if (name)
@@ -20,29 +35,20 @@ namespace gl {
 	class bindable:virtual public with_name {
 	protected:
 		virtual void bind() = 0;
-		//virtual ~bindable() = 0;
 	};
 	class gennable:virtual public with_name {
 	protected:
 		virtual void gen() = 0;
-		//virtual ~gennable() = 0;
 	};
 	class creatable:virtual public with_name {
 	protected:
 		virtual void create() = 0;
-		//virtual ~creatable() = 0;
 	};
 	class vertex_array;
 	class program;
 	class shader;
 	class texture;
 	class texture2d;
-
-	enum class types:unsigned{
-		type_byte = 0x1400,
-		type_ubyte = 0x1401,
-		type_short = 0x1402
-	};
 
 	class context {
 	public:
@@ -67,9 +73,10 @@ namespace gl {
 	class buffer : public gennable, public bindable {
 		friend vertex_array;
 		friend texture2d;
+		static void gl_bind(unsigned target, unsigned name);
 	protected:
 		const buffer_target target;
-		void bind() override;
+		void bind() override { gl_bind(target, *name); };
 		void gen() override;
 	public:
 		void del() override;
@@ -91,6 +98,7 @@ namespace gl {
 
 	class vertex_array : public gennable, public bindable {
 		void gen() override;
+		void gl_vertex_attrib_pointer(unsigned index, unsigned size, unsigned type, bool normalized, unsigned stride, void* pointer);
 	public:
 		void bind() override;
 		void del() override;
@@ -100,7 +108,11 @@ namespace gl {
 		}
 
 		template<class T, int size>
-		void vertex_attrib_pointer(buffer& buff, unsigned index, bool normalized = false);
+		void vertex_attrib_pointer(buffer& buff, unsigned index, bool normalized = false) {
+			bind();
+			buff.bind();
+			gl_vertex_attrib_pointer(index, size, gl_type_token<T>(), normalized, 0, nullptr);
+		}
 
 		void enable_vertex_attrib_array(unsigned index);
 	};
@@ -135,6 +147,7 @@ namespace gl {
 	};       
 
 	class texture2d : public texture {
+		void gl_tex_sub_image_2d(unsigned target, unsigned level, unsigned xo, unsigned yo, unsigned w, unsigned h, unsigned format, unsigned type, void* p);
 	public:
 		texture2d():texture(texture_target::texture_2d){}
 
@@ -142,10 +155,19 @@ namespace gl {
 		void image(internal_format if_, unsigned w, unsigned h, pixel_format pf, std::vector<T> data);
 
 		template<class T>
-		void sub_image(unsigned level, unsigned xoff, unsigned yoff, unsigned w, unsigned h, pixel_format pf, std::vector<T> data);
+		void sub_image(unsigned level, unsigned xoff, unsigned yoff, unsigned w, unsigned h, pixel_format pf, std::vector<T> data) {
+			buffer::gl_bind(buffer_target::pixel_unpack_buffer, 0);
+			bind();
+			gl_tex_sub_image_2d(texture_target::texture_2d, level, xoff, yoff, w, h, pf, gl_type_token<T>(), data.data());
+		}
 
 		template<class T>
-		void sub_image(buffer& buff, unsigned level, unsigned xoff, unsigned yoff, unsigned w, unsigned h, pixel_format pf);
+		void sub_image(buffer& buff, unsigned level, unsigned xoff, unsigned yoff, unsigned w, unsigned h, pixel_format pf) {
+			bind();
+			buff.bind();
+			gl_tex_sub_image_2d(texture_target::texture_2d, level, xoff, yoff, w, h, pf, gl_type_token<T>, nullptr);
+		}
+
 
 		void storage(unsigned levels, internal_format if_, unsigned w, unsigned h);
 	};
