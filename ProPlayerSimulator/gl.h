@@ -88,7 +88,7 @@ namespace gl {
 		void data(size_t bytes, const void * data, buffer_usage usage);
 
 		template<class T>
-		void data(std::initializer_list<T> lst, buffer_usage usage) {
+		void data(buffer_usage usage, std::initializer_list<T> lst) {
 			data(sizeof(T)*lst.size(), lst.begin(), usage);
 		}
 	};

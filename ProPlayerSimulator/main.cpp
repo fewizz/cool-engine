@@ -29,8 +29,7 @@ int main() {
 	GLFWwindow* window = glfwCreateWindow(DEF_W, DEF_H, "Test", NULL, NULL);
 
 	glfwMakeContextCurrent(window);
-	//GLenum err = glewInit();
-	//debug({ "GLEW State: ", reinterpret_cast<const char*>(glewGetErrorString(err)) });
+
 	glc = wrap_context();
 	debug("GL context wrapped");
 	debug_message_callback([](message_source, message_type, unsigned, message_severity, unsigned, const char* message, const void*) {
@@ -56,7 +55,7 @@ int main() {
 		vertex_shader,
 			R"(
 			#version 430 core
-			in vec2 pos;
+			layout(location = 0) in vec2 pos;
 			out vec2 texc;
 			void main() {
 				texc = pos;
@@ -70,13 +69,14 @@ int main() {
 			in vec2 texc;
 			layout(binding = 0) uniform sampler2D tex;
 			void main() {
-				color = texture(tex, vec2(texc.x, -texc.y));//vec4(1., 0., 0., 1.);
+				color = texture(tex, vec2(texc.x, -texc.y));
 			}
 			)"
 	} };
 
 	buffer verts(buffer_target::array_buffer);
-	verts.data({
+	verts.data(buffer_usage::static_draw,
+		{
 		0.F, 1.F,
 		1.F, 0.F,
 		1.F, 1.F,
@@ -84,11 +84,11 @@ int main() {
 		0.F, 0.F,
 		1.F, 0.F,
 		0.F, 1.F
-		}, buffer_usage::static_draw);
+		});
 
 	vertex_array vao;
-	vao.vertex_attrib_pointer<float, 2>(verts, pr.attrib_location("pos"));
-	vao.enable_vertex_attrib_array(pr.attrib_location("pos"));
+	vao.vertex_attrib_pointer<float, 2>(verts, 0);
+	vao.enable_vertex_attrib_array(0);
 
 	while (!glfwWindowShouldClose(window)) {
 		clear({color_buffer});
