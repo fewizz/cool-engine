@@ -1,8 +1,8 @@
 #include <iostream>
 #include <memory>
-#include "gl.h"
 #define GLFW_INCLUDE_NONE
 #include "GLFW/glfw3.h"
+#include "gl.h"
 #include "lodepng.h"
 #include <string>
 #include <vector>
@@ -43,7 +43,7 @@ int main() {
 
 	debug("Bimo loaded to va");
 
-	program pr{ {
+	program pr { {
 		vertex_shader,
 			R"(
 			#version 430 core

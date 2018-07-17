@@ -256,7 +256,7 @@ namespace gl {
 	public:
 		void del() override;
 		program() { create(); }
-		program(std::initializer_list<std::pair<shader_type, char*>> init, 
+		program(std::initializer_list<std::pair<shader_type, const char*>> init, 
 			void(errorh)(shader_compilation_error error) = [](shader_compilation_error err) {})
 		{
 			create();
