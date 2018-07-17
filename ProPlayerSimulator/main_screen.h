@@ -1,11 +1,11 @@
 #pragma once
 
-#include "gui.h"
 #include "gl.h"
+#include "gui.h"
 
-class main_screen : public screen {
+class main_screen : public gui::screen {
 public:
 	main_screen() {
-		childs();
+		childs().push_back();
 	}
 };

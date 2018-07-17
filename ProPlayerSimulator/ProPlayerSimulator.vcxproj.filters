@@ -44,5 +44,8 @@
     <ClInclude Include="main_screen.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="textured_button.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
