@@ -95,15 +95,15 @@ namespace gl {
 
 	//
 
-	void draw_arrays(primitive_type pt, unsigned start, unsigned count, program prog,
-		vertex_array vao, std::initializer_list<std::pair<unsigned, texture>> texture_units) {
+	void draw_arrays(primitive_type pt, unsigned start, unsigned count, program& prog,
+		vertex_array& vao, std::initializer_list<std::pair<unsigned, texture*>> texture_units) {
 
 		prog.use();
 		vao.bind();
 
-		for (auto p : texture_units) {
+		for (std::pair<unsigned, texture*> p : texture_units) {
 			glActiveTexture(GL_TEXTURE0 + p.first);
-			p.second.bind();
+			p.second->bind();
 		}
 
 		glDrawArrays(pt, start, count);

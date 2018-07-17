@@ -28,7 +28,7 @@ namespace gui {
 		std::vector<interface_element> childs;
 
 	public:
-		std::vector<interface_element>& getChilds() { return childs; }
+		std::vector<interface_element>& childs() { return childs; }
 
 		void update() {
 			for (auto &c : childs)
@@ -52,7 +52,7 @@ namespace gui {
 	};
 
 	template<class Dim>
-	class with_changeable_dimension:with_dimesion{
+	class with_changeable_dimension:public with_dimesion<Dim>{
 		virtual void set_dim(Dim d) = 0;
 	};
 
@@ -61,7 +61,7 @@ namespace gui {
 	};
 
 	template<class Pos, class Dim>
-	class rectangle_button : public positioned_interface_element<Pos>, public pressable, public unclaspable, public with_dimension<Dim> {
+	class rectangle_button : public positioned_interface_element<Pos>, public pressable, public unclaspable {
 		bool is_pressed{ false };
 	public :
 		void press() override { is_pressed = true; }

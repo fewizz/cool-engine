@@ -1,12 +1,16 @@
-#ifndef GL_WRAP_H
-#define GL_WRAP_H
+#pragma once
 
 #include <exception>
 #include <string>
 #include <initializer_list>
 #include <vector>
+#include <iostream>
+/*#define DEL_COPY_OPS(cname) \
+cname(const cname & ob) = delete;\
+cname& operator=(const cname & ob) = delete;\
+cname(cname && ob) = delete;\
+cname& operator=(cname && ob) = delete;*/
 
-//#define DEST(cname) ~cname() {if(name)del();}
 namespace gl {
 	class with_name {
 	protected:
@@ -25,9 +29,27 @@ namespace gl {
 			else throw std::exception("GL: can't find appr. type");
 		}
 	public:
-		unsigned* name{ new unsigned{} };
+		with_name() {};
+	
+		const static bool log = false;
+
+		with_name(with_name&& o) :name{ o.name } { 
+			if(log) std::cout << "moc" << std::endl; 
+			o.name = nullptr; 
+		}
+
+		with_name& operator=(with_name&& o) {
+			if(log)std::cout << "mop" << std::endl;
+			name = o.name;
+			o.name = nullptr;
+			return *this;
+		}
+
+		unsigned* name{ new unsigned };
 		virtual void del() {}
 		virtual ~with_name() {
+			if(log)
+				std::cout << "del" << std::endl;
 			if (name)
 				this->del();
 		}
@@ -96,12 +118,13 @@ namespace gl {
 	enum vertex_attrib_pointer_type :unsigned {
 	};
 
-	class vertex_array : public gennable, public bindable {
+	class vertex_array : public virtual gennable, public virtual bindable {
 		void gen() override;
 		void gl_vertex_attrib_pointer(unsigned index, unsigned size, unsigned type, bool normalized, unsigned stride, void* pointer);
 	public:
 		void bind() override;
 		void del() override;
+
 		vertex_array() {
 			gen();
 			bind();
@@ -263,8 +286,8 @@ namespace gl {
 		triangles = 0x0004
 	};
 
-	void draw_arrays(primitive_type pt, unsigned start, unsigned count, program prog,
-		vertex_array vao, std::initializer_list<std::pair<unsigned, texture>> texture_units = {});
+	void draw_arrays(primitive_type pt, unsigned start, unsigned count, program& prog,
+		vertex_array& vao, std::initializer_list<std::pair<unsigned, texture*>> texture_units = {});
 
 	enum message_source :unsigned {
 	};
@@ -284,6 +307,3 @@ namespace gl {
 	void clear_color(float r, float g, float b, float a);
 	void clear(std::initializer_list<clear_buffer> mask);
 }
-
-
-#endif

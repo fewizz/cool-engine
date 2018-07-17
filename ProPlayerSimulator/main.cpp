@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include <initializer_list>
+#include "asset_loader.h"
 
 #define DEF_W 1000
 #define DEF_H 600
@@ -38,16 +39,7 @@ int main() {
 
 	clear_color(0, 0, 0, 1);
 
-	vector<uint8_t> bts;
-	unsigned w, h;
-
-	if (lodepng::decode(bts, w, h, "assets/bimo.png"))
-		debug("error when reading texture");
-
-	debug("Bimo png loaded");
-	texture2d tex;
-	tex.storage(1, internal_format::rgba8, w, h);
-	tex.sub_image(0, 0, 0, w, h, pixel_format::rgba, bts);
+	texture2d tex = asset_loader::load_texture2d("assets/bimo.png");
 
 	debug("Bimo loaded to va");
 
@@ -92,7 +84,7 @@ int main() {
 
 	while (!glfwWindowShouldClose(window)) {
 		clear({color_buffer});
-		draw_arrays(primitive_type::triangles, 0, 6, pr, vao, { {0, tex} });
+		draw_arrays(primitive_type::triangles, 0, 6, pr, vao, { {0, &tex} });
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
