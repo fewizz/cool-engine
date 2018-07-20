@@ -5,7 +5,7 @@
 #include "glm/vec2.hpp"
 
 class textured_button : public gui::rectangle_button<glm::vec2, glm::vec2>{
-	gl::texture2d tex;
+	gl::texture_2d tex;
 
 	textured_button() {
 

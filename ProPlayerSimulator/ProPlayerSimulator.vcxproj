@@ -78,6 +78,7 @@
     <ClCompile Include="gl.cpp" />
     <ClCompile Include="lodepng.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="textured_rectangle.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="asset_loader.h" />
@@ -87,6 +88,7 @@
     <ClInclude Include="hero.h" />
     <ClInclude Include="main_screen.h" />
     <ClInclude Include="textured_button.h" />
+    <ClInclude Include="textured_rectangle.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

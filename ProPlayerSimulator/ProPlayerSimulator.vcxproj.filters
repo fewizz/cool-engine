@@ -24,6 +24,9 @@
     <ClCompile Include="lodepng.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="textured_rectangle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="asset_loader.h">
@@ -45,6 +48,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="textured_button.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="textured_rectangle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

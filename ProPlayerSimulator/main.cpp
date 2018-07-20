@@ -39,10 +39,11 @@ int main() {
 
 	clear_color(0, 0, 0, 1);
 
-	texture2d tex = asset_loader::load_texture2d("assets/bimo.png");
+	texture_2d tex = asset_loader::load_texture2d("assets/bimo.png");
 
 	debug("Bimo loaded to va");
 
+	//std::move
 	program pr { {
 		vertex_shader,
 			R"(
@@ -66,7 +67,7 @@ int main() {
 			)"
 	} };
 
-	buffer verts(buffer_target::array_buffer);
+	array_buffer verts;
 	verts.data(buffer_usage::static_draw,
 		{
 		0.F, 1.F,
