@@ -87,6 +87,7 @@
     <ClInclude Include="gui.h" />
     <ClInclude Include="hero.h" />
     <ClInclude Include="main_screen.h" />
+    <ClInclude Include="renderer.h" />
     <ClInclude Include="textured_button.h" />
     <ClInclude Include="textured_rectangle.h" />
   </ItemGroup>

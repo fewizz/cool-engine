@@ -88,7 +88,7 @@ namespace gl {
 	void program::create() { name = glCreateProgram(); }
 	void program::del() { glDeleteProgram(name); invalidate_name(); }
 
-	void program::attach(shader& sh) { glAttachShader(name, sh.name); }
+	void program::attach(const shader& sh) { glAttachShader(name, sh.name); }
 	void program::link() { glLinkProgram(name); }
 	void program::use() { glUseProgram(name); }
 	unsigned program::attrib_location(std::string attrib_name) { return glGetAttribLocation(name, attrib_name.c_str()); };

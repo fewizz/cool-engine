@@ -29,28 +29,22 @@ namespace gl {
 		void invalidate_name() {
 			name = invalid_name;
 		}
+		virtual void del() {}
 	public:
 		with_name() {};
-	
-		const static bool log = false;
 
 		with_name(with_name&& o) :name{ o.name } { 
-			if(log) std::cout << "moc" << std::endl; 
 			o.invalidate_name();
 		}
 
 		with_name& operator=(with_name&& o) {
-			if(log)std::cout << "mop" << std::endl;
 			name = o.name;
 			o.invalidate_name();
 			return *this;
 		}
 
 		unsigned name{ invalid_name };
-		virtual void del() {}
 		virtual ~with_name() {
-			if(log)
-				std::cout << "del" << std::endl;
 			if (name)
 				del();
 		}
@@ -149,6 +143,7 @@ namespace gl {
 			bind();
 			buff.bind();
 			gl_vertex_attrib_pointer(index, size, gl_type_token<T>(), normalized, 0, nullptr);
+			enable_vertex_attrib_array(index);
 		}
 
 		void enable_vertex_attrib_array(unsigned index);
@@ -243,16 +238,15 @@ namespace gl {
 		shader * const shader_obj;
 	};
 
-	enum shader_type :unsigned {
-		compute_shader = 0x91B9,
-		vertex_shader = 0x8B31,
-		fragment_shader = 0x8B30
-	};
-
 	class shader:public creatable {
 		friend program;
 	protected:
 		void create() override;
+		enum shader_type :unsigned {
+			compute_shader = 0x91B9,
+			vertex_shader = 0x8B31,
+			fragment_shader = 0x8B30
+		};
 	public:
 		void del() override;
 		const shader_type type;
@@ -260,9 +254,10 @@ namespace gl {
 		shader(shader_type type, std::string src) :shader(type) { source(src); compile(); }
 
 		void source(std::string src);
-
 		void compile();
 	};
+	class vertex_shader : public shader { public: vertex_shader(std::string src) :shader(shader_type::vertex_shader, src) {} };
+	class fragment_shader : public shader { public: fragment_shader(std::string src) :shader(shader_type::fragment_shader, src) {} };
 
 	class program :public creatable {
 	protected:
@@ -270,20 +265,18 @@ namespace gl {
 	public:
 		void del() override;
 		program() { create(); }
-		program(std::initializer_list<std::pair<shader_type, const char*>> init, 
+		program(std::initializer_list<shader> init, 
 			void(errorh)(shader_compilation_error error) = [](shader_compilation_error err) {})
 		{
 			create();
 			try {
-				for (auto p : init) {
-					shader s(p.first, p.second);
+				for (auto &s : init)
 					attach(s);
-				}
 			}
 			catch (shader_compilation_error e) { errorh(e); }
 			link();
 		}
-		void attach(shader& sh);
+		void attach(const shader& sh);
 		void link();
 		void use();
 		unsigned attrib_location(std::string attrib_name);

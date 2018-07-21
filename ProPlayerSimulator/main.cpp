@@ -44,8 +44,8 @@ int main() {
 	debug("Bimo loaded to va");
 
 	//std::move
-	program pr { {
-		vertex_shader,
+	program pr {
+		vertex_shader(
 			R"(
 			#version 430 core
 			layout(location = 0) in vec2 pos;
@@ -54,8 +54,8 @@ int main() {
 				texc = pos;
 				gl_Position = vec4(pos, 0., 1.);
 			}
-			)"},{
-		fragment_shader,
+			)"),
+		fragment_shader(
 			R"(
 			#version 430 core
 			out vec4 color;
@@ -64,8 +64,8 @@ int main() {
 			void main() {
 				color = texture(tex, vec2(texc.x, -texc.y));
 			}
-			)"
-	} };
+			)")
+	};
 
 	array_buffer verts;
 	verts.data(buffer_usage::static_draw,
@@ -81,7 +81,6 @@ int main() {
 
 	vertex_array vao;
 	vao.vertex_attrib_pointer<float, 2>(verts, 0);
-	vao.enable_vertex_attrib_array(0);
 
 	while (!glfwWindowShouldClose(window)) {
 		clear({color_buffer});
