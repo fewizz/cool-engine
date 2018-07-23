@@ -53,18 +53,20 @@ public:
 };*/
 /////////////////////////////////////////
 class quad_renderer :public virtual renderer {
-public:
-	quad_renderer(matrix_provider mp, glm::vec2 p1, glm::vec2 p2) {
+glm::vec2* pos_arr = nullptr;
 
+public:
+	quad_renderer(matrix_provider& mp, glm::vec2 arr[4]) {
+		pos_arr = arr;
 	}
 
 	void render() override {
-		static gl::program program{
+		static gl::program program {
 			gl::vertex_shader(R"(
 #version 430 core
 
 layout (location = 0) uniform mat4;
-layout (location = 1) uniform vec2 v[4];
+layout (location = 1) in vec2 v[4];
 
 void main() {
 	gl_Position = mat * vec4(v[gl_VertexID]);

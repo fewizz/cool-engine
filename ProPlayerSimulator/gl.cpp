@@ -8,6 +8,15 @@ namespace gl {
 		glewInit();
 		return new context{};
 	}
+	// fence_sync
+	fence_sync::fence_sync() :ptr{ glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0) } {}
+	sync_status client_wait_sync(fence_sync s, unsigned timeout) { 
+		return static_cast<sync_status>(glClientWaitSync(reinterpret_cast<GLsync>(s.ptr), GL_SYNC_FLUSH_COMMANDS_BIT, timeout)); 
+	}
+	void wait_sync(fence_sync s) { glWaitSync(reinterpret_cast<GLsync>(s.ptr), 0, GL_TIMEOUT_IGNORED); }
+
+	// query
+	void query::gen() {};
 
 	// buffer
 	void buffer::gen() { glGenBuffers(1, &name); }
@@ -125,5 +134,9 @@ namespace gl {
 		for (auto x : mask)
 			r |= x;
 		glClear(r);
+	}
+
+	void vertex_attrib2fv(unsigned index, const float * values) {
+		glVertexAttrib2fv(index, values);
 	}
 }

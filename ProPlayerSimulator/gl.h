@@ -72,6 +72,36 @@ namespace gl {
 	};
 
 	context* wrap_context();
+	//
+
+	// §4.1
+	class fence_sync;
+	enum class sync_status;
+
+	class fence_sync {
+		friend sync_status client_wait_sync(fence_sync, unsigned);
+		friend void wait_sync(fence_sync);
+		void* ptr;
+	public:
+		fence_sync();
+	};
+
+	enum class sync_status:unsigned {
+		already_signaled = 0x911A,
+		timeout_expired,
+		condition_satisfied,
+		wait_failed
+	};
+
+	sync_status client_wait_sync(fence_sync, unsigned);
+	void wait_sync(fence_sync);
+
+	// §4.2
+	// TODO
+
+	class query : public gennable {
+		void gen() override;
+	};
 
 	enum buffer_usage : unsigned {
 		static_draw = 0x88E4
@@ -313,4 +343,5 @@ namespace gl {
 	};
 	void clear_color(float r, float g, float b, float a);
 	void clear(std::initializer_list<clear_buffer> mask);
+	void vertex_attrib2fv(unsigned index, const float* values);
 }
