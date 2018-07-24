@@ -30,7 +30,7 @@ namespace gl {
 
 	// vertex_array
 	void vertex_array::gen() { glGenVertexArrays(1, &name); }
-	void vertex_array::bind() { glBindVertexArray(name); }
+	void vertex_array::gl_bind(unsigned name) { glBindVertexArray(name); }
 	void vertex_array::del() { glDeleteBuffers(1, &name); invalidate_name(); }
 
 	void vertex_array::gl_vertex_attrib_pointer(unsigned index, unsigned size, unsigned type, bool normalized, unsigned stride, void* pointer) {
@@ -103,20 +103,22 @@ namespace gl {
 	unsigned program::attrib_location(std::string attrib_name) { return glGetAttribLocation(name, attrib_name.c_str()); };
 
 	//
+	void draw_arrays(primitive_type pt, unsigned start, unsigned count, program& prog) {
+		vertex_array::gl_bind(0);
+		prog.use();
+		glDrawArrays(pt, start, count);
+	}
 
 	void draw_arrays(primitive_type pt, unsigned start, unsigned count, program& prog,
 		vertex_array& vao, std::initializer_list<std::pair<unsigned, texture*>> texture_units) {
 
-		prog.use();
 		vao.bind();
 
 		for (std::pair<unsigned, texture*> p : texture_units) {
 			glActiveTexture(GL_TEXTURE0 + p.first);
 			p.second->bind();
 		}
-
-		glDrawArrays(pt, start, count);
-
+		draw_arrays(pt, start, count, prog);
 	}
 
 	void debug_message_callback(
@@ -138,5 +140,8 @@ namespace gl {
 
 	void vertex_attrib2fv(unsigned index, const float * values) {
 		glVertexAttrib2fv(index, values);
+	}
+	void vertex_attrib4fv(unsigned index, const float * values) {
+		glVertexAttrib4fv(index, values);
 	}
 }

@@ -5,6 +5,7 @@
 #include <initializer_list>
 #include <vector>
 #include <iostream>
+#include <map>
 
 namespace gl {
 	class with_name {
@@ -68,6 +69,7 @@ namespace gl {
 	class texture_2d;
 
 	class context {
+		//std::map<texture::texture_target, unsigned> tex_targets;
 	public:
 	};
 
@@ -76,7 +78,7 @@ namespace gl {
 
 	// §4.1
 	class fence_sync;
-	enum class sync_status;
+	enum class sync_status:unsigned;
 
 	class fence_sync {
 		friend sync_status client_wait_sync(fence_sync, unsigned);
@@ -88,9 +90,9 @@ namespace gl {
 
 	enum class sync_status:unsigned {
 		already_signaled = 0x911A,
-		timeout_expired,
-		condition_satisfied,
-		wait_failed
+		timeout_expired = 0x911B,
+		condition_satisfied = 0x911C,
+		wait_failed = 0x911D
 	};
 
 	sync_status client_wait_sync(fence_sync, unsigned);
@@ -141,16 +143,16 @@ namespace gl {
 		buffer_target target() override { return buffer_target::array_buffer; }
 	};
 
+	enum primitive_type :unsigned;
+	void draw_arrays(primitive_type pt, unsigned start, unsigned count, program& prog);
+
 	class vertex_array : public virtual gennable, public virtual bindable {
-		std::vector<unsigned> attribs;
-		class attrib_array {
-			unsigned index;
-			std::shared_ptr<array_buffer> vbo;
-		};
+		friend void draw_arrays(primitive_type, unsigned, unsigned, program&);
 		void gen() override;
 		void gl_vertex_attrib_pointer(unsigned index, unsigned size, unsigned type, bool normalized, unsigned stride, void* pointer);
+		void static gl_bind(unsigned name);
 	public:
-		void bind() override;
+		void bind() override { gl_bind(name); };
 		void del() override;
 
 		vertex_array() {
@@ -159,7 +161,7 @@ namespace gl {
 		}
 
 		template<class T>
-		vertex_array(std::initializer_list<std::pair<unsigned, initializer_list<T>>> bindings) {
+		vertex_array(std::initializer_list<std::pair<unsigned, std::initializer_list<T>>> bindings) {
 			vertex_array();
 			bind();
 			for (auto p : bindings) {
@@ -189,10 +191,12 @@ namespace gl {
 
 	class texture : public gennable, public bindable {
 		void gen() override;
+		friend context;
 	protected:
 		enum texture_target :unsigned {
 			texture_2d = 0x0DE1
 		};
+
 		virtual texture_target target() = 0;
 	public:
 		void bind() override;
@@ -214,7 +218,7 @@ namespace gl {
 
 		template<class T>
 		void sub_image(unsigned level, unsigned xoff, unsigned yoff, unsigned w, unsigned h, pixel_format pf, std::vector<T> data) {
-			buffer::gl_bind(buffer_target::pixel_unpack_buffer, 0);
+			buffer::gl_bind(buffer::buffer_target::pixel_unpack_buffer, 0);
 			bind();
 			gl_tex_sub_image_2d(target(), level, xoff, yoff, w, h, pf, gl_type_token<T>(), data.data());
 		}
@@ -322,7 +326,7 @@ namespace gl {
 	enum primitive_type :unsigned {
 		triangles = 0x0004
 	};
-
+	void draw_arrays(primitive_type pt, unsigned start, unsigned count, program& prog);
 	void draw_arrays(primitive_type pt, unsigned start, unsigned count, program& prog,
 		vertex_array& vao, std::initializer_list<std::pair<unsigned, texture*>> texture_units = {});
 
@@ -344,4 +348,5 @@ namespace gl {
 	void clear_color(float r, float g, float b, float a);
 	void clear(std::initializer_list<clear_buffer> mask);
 	void vertex_attrib2fv(unsigned index, const float* values);
+	void vertex_attrib4fv(unsigned index, const float* values);
 }

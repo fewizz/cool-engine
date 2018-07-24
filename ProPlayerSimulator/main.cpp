@@ -8,6 +8,10 @@
 #include <vector>
 #include <initializer_list>
 #include "asset_loader.h"
+#include "glm/glm.hpp"
+#include "glm/mat4x4.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "renderer.h"
 
 #define DEF_W 1000
 #define DEF_H 600
@@ -37,14 +41,18 @@ int main() {
 		debug({ "GL: ", message });
 	});
 
+	glm::mat4 vm{};
+	glm::mat4 pm = glm::ortho(-DEF_W / 2, DEF_W / 2, -DEF_H / 2, DEF_H / 2);
+
 	clear_color(0, 0, 0, 1);
 
-	texture_2d tex = asset_loader::load_texture2d("assets/bimo.png");
 
-	debug("Bimo loaded to va");
+
+	//texture_2d tex = asset_loader::load_texture2d("assets/bimo.png");
+	//debug("Bimo loaded to va");
 
 	//std::move
-	program pr {
+	/*program pr {
 		vertex_shader(
 			R"(
 			#version 430 core
@@ -65,9 +73,9 @@ int main() {
 				color = texture(tex, vec2(texc.x, -texc.y));
 			}
 			)")
-	};
+	};*/
 
-	array_buffer verts;
+	/*array_buffer verts;
 	verts.data(buffer_usage::static_draw,
 		{
 		0.F, 1.F,
@@ -80,11 +88,14 @@ int main() {
 		});
 
 	vertex_array vao;
-	vao.vertex_attrib_pointer<float, 2>(verts, 0);
+	vao.vertex_attrib_pointer<float, 2>(verts, 0);*/
+
+	quad_renderer rend({ 0, 0 }, { 0, 200 }, { 200, 200 }, { 0, 200 });
 
 	while (!glfwWindowShouldClose(window)) {
 		clear({color_buffer});
-		draw_arrays(primitive_type::triangles, 0, 6, pr, vao, { {0, &tex} });
+		rend.render(vm * pm);
+		//draw_arrays(primitive_type::triangles, 0, 6, pr, vao, { {0, &tex} });
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
