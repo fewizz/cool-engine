@@ -15,7 +15,7 @@ namespace asset_loader {
 
 		gl::texture_2d tex;
 		tex.storage(1, gl::internal_format::rgba8, w, h);
-		tex.sub_image(0, 0, 0, w, h, gl::pixel_format::rgba, bts);
+		tex.sub_image(0, 0, 0, w, h, gl::pixel_format::rgba, bts.data());
 		return tex;
 	}
 }

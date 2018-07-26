@@ -42,11 +42,9 @@ int main() {
 	});
 
 	glm::mat4 vm{};
-	glm::mat4 pm = glm::ortho(-DEF_W / 2, DEF_W / 2, -DEF_H / 2, DEF_H / 2);
+	glm::mat4 pm = glm::ortho(-DEF_W / 2.f, DEF_W / 2.f, -DEF_H / 2.f, DEF_H / 2.f, 0.f, 1.f);
 
 	clear_color(0, 0, 0, 1);
-
-
 
 	//texture_2d tex = asset_loader::load_texture2d("assets/bimo.png");
 	//debug("Bimo loaded to va");
@@ -90,11 +88,11 @@ int main() {
 	vertex_array vao;
 	vao.vertex_attrib_pointer<float, 2>(verts, 0);*/
 
-	quad_renderer rend({ 0, 0 }, { 0, 200 }, { 200, 200 }, { 0, 200 });
+	quad_renderer rend({ 0, 0 }, { 0, 100 }, { 100, 100 }, { 100, 0 });
 
 	while (!glfwWindowShouldClose(window)) {
 		clear({color_buffer});
-		rend.render(vm * pm);
+		rend.render(pm);
 		//draw_arrays(primitive_type::triangles, 0, 6, pr, vao, { {0, &tex} });
 		glfwSwapBuffers(window);
 		glfwPollEvents();

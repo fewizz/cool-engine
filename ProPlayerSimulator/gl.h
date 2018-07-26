@@ -6,6 +6,7 @@
 #include <vector>
 #include <iostream>
 #include <map>
+#include <array>
 
 namespace gl {
 	class with_name {
@@ -112,36 +113,37 @@ namespace gl {
 	class buffer : public gennable, public bindable {
 		friend vertex_array;
 		friend texture_2d;
-		static void gl_bind(unsigned target, unsigned name);
 	protected:
 		enum buffer_target : unsigned {
-			array_buffer = 0x8892,
-			element_array_buffer = 0x8893,
-			pixel_pack_buffer = 0x88EB,
-			pixel_unpack_buffer = 0x88EC
+			array = 0x8892,
+			element_array = 0x8893,
+			pixel_pack = 0x88EB,
+			pixel_unpack = 0x88EC
 		};
 
-		virtual buffer_target target() = 0;
-		void bind() override { gl_bind(target(), name); };
-		void gen() override;
+		buffer_target target;
+		static unsigned gl_gen();
+		static void gl_bind(unsigned target, unsigned name);
+
+		void bind() override { gl_bind(target, name); }
+		void gen() override { name = gl_gen(); }
 	public:
-		buffer() {
+		buffer(buffer_target tar) : target{tar} {
 			gen();
 			bind();
 		}
 
 		void del() override;
-		void data(size_t bytes, const void * data, buffer_usage usage);
+		void data(size_t bytes, const void * data, buffer_usage usage = buffer_usage::static_draw);
 
 		template<class T>
-		void data(buffer_usage usage, std::initializer_list<T> lst) {
+		void data(std::initializer_list<T> lst, buffer_usage usage = buffer_usage::static_draw) {
 			data(sizeof(T)*lst.size(), lst.begin(), usage);
 		}
 	};
 
-	class array_buffer : public buffer {
-		buffer_target target() override { return buffer_target::array_buffer; }
-	};
+	//typedef buffer<buffer_target::array> array_buffer;
+	class array_buffer : public buffer { public: array_buffer() :buffer(buffer_target::array) {} };
 
 	enum primitive_type :unsigned;
 	void draw_arrays(primitive_type pt, unsigned start, unsigned count, program& prog);
@@ -161,21 +163,29 @@ namespace gl {
 		}
 
 		template<class T>
-		vertex_array(std::initializer_list<std::pair<unsigned, std::initializer_list<T>>> bindings) {
+		vertex_array(std::initializer_list<std::pair<unsigned, T*>> bindings) {
 			vertex_array();
 			bind();
 			for (auto p : bindings) {
-				buffer vbo{buffer_target::array_buffer};
-				
+				array_buffer vbo{buffer_target::array_buffer};
+				vbo.data(gl::buffer_usage::static_draw, p.second);
+				vertex_attrib_pointer(vbo, p.first);
+				enable_vertex_attrib_array(p.first);
 			}
 		}
 
 		template<class T, int size>
-		void vertex_attrib_pointer(buffer& buff, unsigned index, bool normalized = false) {
+		void vertex_attrib_pointer(unsigned index, buffer& buff, bool normalized = false) {
 			bind();
 			buff.bind();
 			gl_vertex_attrib_pointer(index, size, gl_type_token<T>(), normalized, 0, nullptr);
-			enable_vertex_attrib_array(index);
+		}
+
+		template<class T, int size>
+		void vertex_attrib_pointer(unsigned index, void* data, size_t bytes, bool normalized = false) {
+			array_buffer vbo;
+			vbo.data(bytes, data);
+			vertex_attrib_pointer<T, size>(index, vbo, normalized);
 		}
 
 		void enable_vertex_attrib_array(unsigned index);
@@ -214,13 +224,13 @@ namespace gl {
 		texture_target target() override { return texture_target::texture_2d; }
 	public:
 		template<class T>
-		void image(internal_format if_, unsigned w, unsigned h, pixel_format pf, std::vector<T> data);
+		void image(internal_format if_, unsigned w, unsigned h, pixel_format pf, T* data);
 
 		template<class T>
-		void sub_image(unsigned level, unsigned xoff, unsigned yoff, unsigned w, unsigned h, pixel_format pf, std::vector<T> data) {
-			buffer::gl_bind(buffer::buffer_target::pixel_unpack_buffer, 0);
+		void sub_image(unsigned level, unsigned xoff, unsigned yoff, unsigned w, unsigned h, pixel_format pf, T* data) {
+			buffer::gl_bind(buffer::buffer_target::pixel_unpack, 0);
 			bind();
-			gl_tex_sub_image_2d(target(), level, xoff, yoff, w, h, pf, gl_type_token<T>(), data.data());
+			gl_tex_sub_image_2d(target(), level, xoff, yoff, w, h, pf, gl_type_token<T>(), data);
 		}
 
 		template<class T>
@@ -314,6 +324,7 @@ namespace gl {
 		void link();
 		void use();
 		unsigned attrib_location(std::string attrib_name);
+		void uniform_matrix4fv(unsigned location, unsigned count, bool tr, float* values);
 	};
 
 	class framebuffer : public gennable, public bindable {

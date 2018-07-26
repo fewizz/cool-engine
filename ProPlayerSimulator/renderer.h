@@ -54,16 +54,22 @@ public:
 };*/
 /////////////////////////////////////////
 class quad_renderer :public virtual renderer {
-glm::vec2 pos_arr[6];
+	gl::vertex_array vao{};
 
 public:
 	quad_renderer(glm::vec2 v0, glm::vec2 v1, glm::vec2 v2, glm::vec2 v3) {
+		glm::vec2 pos_arr[6];
+
 		pos_arr[0] = v0;
 		pos_arr[1] = v1;
 		pos_arr[2] = v2;
 		pos_arr[3] = v2;
-		pos_arr[4] = v1;
-		pos_arr[5] = v3;
+		pos_arr[4] = v3;
+		pos_arr[5] = v0;
+
+		//vao = { {0, reinterpret_cast<float*>(pos_arr)} };);
+		vao.vertex_attrib_pointer<float, 2>(0, pos_arr, 6*sizeof(glm::vec2));
+		vao.enable_vertex_attrib_array(0);
 	}
 
 	void render() override { render(glm::mat4{}); }
@@ -73,24 +79,25 @@ public:
 #version 430 core
 
 layout (location = 0) uniform mat4 mat;
-layout (location = 1) in vec2 v[4];
+layout (location = 0) in vec2 pos;
 
 void main() {
-	gl_Position = mat * vec4(v[gl_VertexID], 0, 1.);
+	gl_Position = mat * vec4(pos, 0, 1);
 }
 			)"),
 			gl::fragment_shader(R"(
 #version 430 core
 
-out vec4 c;
+out vec4 color;
 void main() {
-	c = vec4(1.);
+	color = vec4(1);
 }
 			)") };
 		
-		gl::vertex_attrib4fv(0, glm::value_ptr(combined));
-		gl::vertex_attrib2fv(4, glm::value_ptr(pos_arr[0]));
-		gl::draw_arrays(gl::primitive_type::triangles, 0, 6, program);
+		program.uniform_matrix4fv(0, 1, false, glm::value_ptr(combined));
+		//gl::vertex_attrib4fv(0, glm::value_ptr(combined));
+		//gl::vertex_attrib2fv(4, glm::value_ptr(pos_arr[0]));
+		gl::draw_arrays(gl::primitive_type::triangles, 0, 6, program, vao);
 	}
 
 };

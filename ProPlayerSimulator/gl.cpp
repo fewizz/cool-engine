@@ -19,13 +19,15 @@ namespace gl {
 	void query::gen() {};
 
 	// buffer
-	void buffer::gen() { glGenBuffers(1, &name); }
-	void buffer::gl_bind(unsigned target, unsigned name) { glBindBuffer(target, name); }
+	unsigned buffer::gl_gen() { unsigned n; glGenBuffers(1, &n); return n; }
+	void buffer::gl_bind(unsigned t, unsigned n) {
+		glBindBuffer(t, n);
+	}
 	void buffer::del() { glDeleteBuffers(1, &name); invalidate_name(); }
 
 	void buffer::data(size_t bytes, const void * data, buffer_usage usage) {
 		bind();
-		glBufferData(target(), bytes, data, usage);
+		glBufferData(target, bytes, data, usage);
 	}
 
 	// vertex_array
@@ -53,9 +55,9 @@ namespace gl {
 	}
 
 	template<class T>
-	void texture_2d::image(internal_format if_, unsigned w, unsigned h, pixel_format pf, std::vector<T> data) {
+	void texture_2d::image(internal_format if_, unsigned w, unsigned h, pixel_format pf, T* data) {
 		bind();
-		glTexImage2D(target(), 0, if_, w, h, 0, pf, gl_type_token<T>, data.data());
+		glTexImage2D(target(), 0, if_, w, h, 0, pf, gl_type_token<T>, data);
 	}
 
 	void texture_2d::storage(unsigned levels, internal_format if_, unsigned w, unsigned h) {
@@ -101,10 +103,13 @@ namespace gl {
 	void program::link() { glLinkProgram(name); }
 	void program::use() { glUseProgram(name); }
 	unsigned program::attrib_location(std::string attrib_name) { return glGetAttribLocation(name, attrib_name.c_str()); };
+	void program::uniform_matrix4fv(unsigned location, unsigned count, bool tr, float * values) {
+		use();
+		glUniformMatrix4fv(location, count, tr, values);
+	}
 
 	//
 	void draw_arrays(primitive_type pt, unsigned start, unsigned count, program& prog) {
-		vertex_array::gl_bind(0);
 		prog.use();
 		glDrawArrays(pt, start, count);
 	}
@@ -112,12 +117,12 @@ namespace gl {
 	void draw_arrays(primitive_type pt, unsigned start, unsigned count, program& prog,
 		vertex_array& vao, std::initializer_list<std::pair<unsigned, texture*>> texture_units) {
 
-		vao.bind();
-
 		for (std::pair<unsigned, texture*> p : texture_units) {
 			glActiveTexture(GL_TEXTURE0 + p.first);
 			p.second->bind();
 		}
+
+		vao.bind();
 		draw_arrays(pt, start, count, prog);
 	}
 
