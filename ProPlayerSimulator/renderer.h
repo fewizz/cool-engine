@@ -58,17 +58,8 @@ class quad_renderer :public virtual renderer {
 
 public:
 	quad_renderer(glm::vec2 v0, glm::vec2 v1, glm::vec2 v2, glm::vec2 v3) {
-		glm::vec2 pos_arr[6];
-
-		pos_arr[0] = v0;
-		pos_arr[1] = v1;
-		pos_arr[2] = v2;
-		pos_arr[3] = v2;
-		pos_arr[4] = v3;
-		pos_arr[5] = v0;
-
-		//vao = { {0, reinterpret_cast<float*>(pos_arr)} };);
-		vao.vertex_attrib_pointer<float, 2>(0, pos_arr, 6*sizeof(glm::vec2));
+		glm::vec2 pos_arr[] = { v0, v1, v2, v3 };
+		vao.vertex_attrib_pointer<float, 2>(0, pos_arr, 4*sizeof(glm::vec2));
 		vao.enable_vertex_attrib_array(0);
 	}
 
@@ -89,15 +80,15 @@ void main() {
 #version 430 core
 
 out vec4 color;
+layout (location = 4) uniform sampler2D tex;
+
 void main() {
 	color = vec4(1);
 }
 			)") };
 		
 		program.uniform_matrix4fv(0, 1, false, glm::value_ptr(combined));
-		//gl::vertex_attrib4fv(0, glm::value_ptr(combined));
-		//gl::vertex_attrib2fv(4, glm::value_ptr(pos_arr[0]));
-		gl::draw_arrays(gl::primitive_type::triangles, 0, 6, program, vao);
+		gl::draw_arrays(gl::primitive_type::triangles_fan, 0, 4, program, vao);
 	}
 
 };

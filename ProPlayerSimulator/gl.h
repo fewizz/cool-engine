@@ -309,7 +309,7 @@ namespace gl {
 	public:
 		void del() override;
 		program() { create(); }
-		program(std::initializer_list<shader> init, 
+		program(std::initializer_list<shader> init,
 			void(errorh)(shader_compilation_error error) = [](shader_compilation_error err) {})
 		{
 			create();
@@ -335,7 +335,8 @@ namespace gl {
 	};
 
 	enum primitive_type :unsigned {
-		triangles = 0x0004
+		triangles = 0x0004,
+		triangles_fan = 0x0006
 	};
 	void draw_arrays(primitive_type pt, unsigned start, unsigned count, program& prog);
 	void draw_arrays(primitive_type pt, unsigned start, unsigned count, program& prog,

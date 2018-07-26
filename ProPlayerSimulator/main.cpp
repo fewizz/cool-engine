@@ -46,54 +46,11 @@ int main() {
 
 	clear_color(0, 0, 0, 1);
 
-	//texture_2d tex = asset_loader::load_texture2d("assets/bimo.png");
-	//debug("Bimo loaded to va");
-
-	//std::move
-	/*program pr {
-		vertex_shader(
-			R"(
-			#version 430 core
-			layout(location = 0) in vec2 pos;
-			out vec2 texc;
-			void main() {
-				texc = pos;
-				gl_Position = vec4(pos, 0., 1.);
-			}
-			)"),
-		fragment_shader(
-			R"(
-			#version 430 core
-			out vec4 color;
-			in vec2 texc;
-			layout(binding = 0) uniform sampler2D tex;
-			void main() {
-				color = texture(tex, vec2(texc.x, -texc.y));
-			}
-			)")
-	};*/
-
-	/*array_buffer verts;
-	verts.data(buffer_usage::static_draw,
-		{
-		0.F, 1.F,
-		1.F, 0.F,
-		1.F, 1.F,
-
-		0.F, 0.F,
-		1.F, 0.F,
-		0.F, 1.F
-		});
-
-	vertex_array vao;
-	vao.vertex_attrib_pointer<float, 2>(verts, 0);*/
-
 	quad_renderer rend({ 0, 0 }, { 0, 100 }, { 100, 100 }, { 100, 0 });
 
 	while (!glfwWindowShouldClose(window)) {
 		clear({color_buffer});
 		rend.render(pm);
-		//draw_arrays(primitive_type::triangles, 0, 6, pr, vao, { {0, &tex} });
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
