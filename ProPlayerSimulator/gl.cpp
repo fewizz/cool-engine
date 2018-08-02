@@ -39,14 +39,14 @@ namespace gl {
 		glVertexAttribPointer(index, size, type, normalized, stride, nullptr);
 	}
 
-	void vertex_array::enable_vertex_attrib_array(unsigned index) {
+	void vertex_array::enable_attrib_array(unsigned index) {
 		bind();
 		glEnableVertexAttribArray(index);
 	}
 
 	// texture
 	void texture::gen() { glGenTextures(1, &name); }
-	void texture::bind() { glBindTexture(target(), name); }
+	void texture::bind() { glBindTexture(target, name); }
 	void texture::del() { glDeleteBuffers(1, &name); invalidate_name(); }
 
 	// texture2d
@@ -57,12 +57,12 @@ namespace gl {
 	template<class T>
 	void texture_2d::image(internal_format if_, unsigned w, unsigned h, pixel_format pf, T* data) {
 		bind();
-		glTexImage2D(target(), 0, if_, w, h, 0, pf, gl_type_token<T>, data);
+		glTexImage2D(target, 0, if_, w, h, 0, pf, gl_type_token<T>, data);
 	}
 
 	void texture_2d::storage(unsigned levels, internal_format if_, unsigned w, unsigned h) {
 		bind();
-		glTexStorage2D(target(), levels, if_, w, h);
+		glTexStorage2D(target, levels, if_, w, h);
 	}
 
 	// sampler

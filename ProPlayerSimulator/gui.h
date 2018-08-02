@@ -27,11 +27,6 @@ namespace gui {
 		virtual Pos get_pos() override { return pos_state; }
 	};
 
-	/*template<class Pos>
-	class positioned_interface_element:public interface_element, public with_position<Pos> {
-	public:
-	};*/
-
 	class screen:public interface_element {
 		std::vector<interface_element> childs;
 

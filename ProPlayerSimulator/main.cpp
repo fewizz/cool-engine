@@ -40,8 +40,11 @@ int main() {
 
 	glc = wrap_context();
 	debug("GL context wrapped");
-	debug_message_callback([](message_source, message_type, unsigned, message_severity, unsigned, const char* message, const void*) {
+	debug_message_callback([](message_source, message_type type, unsigned, message_severity, unsigned, const char* message, const void*) {
 		debug({ "GL: ", message });
+		if (type == message_type::error)
+			//std::exit(0);
+			throw std::exception("GL ERROR");
 	});
 
 	game::proj = glm::ortho(-DEF_W / 2.f, DEF_W / 2.f, -DEF_H / 2.f, DEF_H / 2.f, 0.f, 1.f);
@@ -49,6 +52,8 @@ int main() {
 	clear_color(0, 0, 0, 1);
 
 	quad_renderer rend({ 0, 0 }, { 0, 100 }, { 100, 100 }, { 100, 0 });
+	auto tex = game::assets_loader::load_texture2d("assets/bimo.png");
+	rend.texture(&tex);
 
 	while (!glfwWindowShouldClose(window)) {
 		clear({color_buffer});

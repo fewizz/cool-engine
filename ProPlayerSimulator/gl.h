@@ -169,26 +169,26 @@ namespace gl {
 			for (auto p : bindings) {
 				array_buffer vbo{buffer_target::array_buffer};
 				vbo.data(gl::buffer_usage::static_draw, p.second);
-				vertex_attrib_pointer(vbo, p.first);
-				enable_vertex_attrib_array(p.first);
+				attrib_pointer(vbo, p.first);
+				enable_attrib_array(p.first);
 			}
 		}
 
 		template<class T, int size>
-		void vertex_attrib_pointer(unsigned index, buffer& buff, bool normalized = false) {
+		void attrib_pointer(unsigned index, buffer& buff, bool normalized = false) {
 			bind();
 			buff.bind();
 			gl_vertex_attrib_pointer(index, size, gl_type_token<T>(), normalized, 0, nullptr);
 		}
 
 		template<class T, int size>
-		void vertex_attrib_pointer(unsigned index, void* data, size_t bytes, bool normalized = false) {
+		void attrib_pointer(unsigned index, void* data, size_t bytes, bool normalized = false) {
 			array_buffer vbo;
 			vbo.data(bytes, data);
-			vertex_attrib_pointer<T, size>(index, vbo, normalized);
+			attrib_pointer<T, size>(index, vbo, normalized);
 		}
 
-		void enable_vertex_attrib_array(unsigned index);
+		void enable_attrib_array(unsigned index);
 	};
 
 	enum internal_format:unsigned {
@@ -207,7 +207,13 @@ namespace gl {
 			texture_2d = 0x0DE1
 		};
 
-		virtual texture_target target() = 0;
+		//virtual texture_target target() = 0;
+		texture(texture_target tar) :target{ tar } {
+			gen();
+			bind();
+		}
+
+		texture_target target;
 	public:
 		void bind() override;
 		void del() override;
@@ -221,8 +227,10 @@ namespace gl {
 	class texture_2d : public texture {
 		void gl_tex_sub_image_2d(unsigned target, unsigned level, unsigned xo, unsigned yo, unsigned w, unsigned h, unsigned format, unsigned type, void* p);
 	protected:
-		texture_target target() override { return texture_target::texture_2d; }
+		//texture_target target() override { return texture_target::texture_2d; }
 	public:
+		texture_2d():texture{ texture_target::texture_2d } {}
+
 		template<class T>
 		void image(internal_format if_, unsigned w, unsigned h, pixel_format pf, T* data);
 
@@ -230,14 +238,14 @@ namespace gl {
 		void sub_image(unsigned level, unsigned xoff, unsigned yoff, unsigned w, unsigned h, pixel_format pf, T* data) {
 			buffer::gl_bind(buffer::buffer_target::pixel_unpack, 0);
 			bind();
-			gl_tex_sub_image_2d(target(), level, xoff, yoff, w, h, pf, gl_type_token<T>(), data);
+			gl_tex_sub_image_2d(target, level, xoff, yoff, w, h, pf, gl_type_token<T>(), data);
 		}
 
 		template<class T>
 		void sub_image(buffer& buff, unsigned level, unsigned xoff, unsigned yoff, unsigned w, unsigned h, pixel_format pf) {
 			bind();
 			buff.bind();
-			gl_tex_sub_image_2d(target(), level, xoff, yoff, w, h, pf, gl_type_token<T>, nullptr);
+			gl_tex_sub_image_2d(target, level, xoff, yoff, w, h, pf, gl_type_token<T>, nullptr);
 		}
 
 
@@ -246,7 +254,7 @@ namespace gl {
 
 	class texture_rect :public texture_2d {
 	public:
-		
+		//texture_rect() :{texture_target::texture_2d} {}
 	};
 
 	/*enum sampler_parameter :GLenum {
@@ -347,6 +355,15 @@ namespace gl {
 	enum message_source :unsigned {
 	};
 	enum message_type :unsigned {
+		error = 0x824C,
+		deprecated_behavior,
+		undefined_behavior,
+		portability,
+		performance,
+		marker,
+		push_group,
+		pop_group,
+		other
 	};
 	enum message_severity :unsigned {
 	};
