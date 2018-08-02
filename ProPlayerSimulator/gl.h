@@ -325,6 +325,7 @@ namespace gl {
 		void use();
 		unsigned attrib_location(std::string attrib_name);
 		void uniform_matrix4fv(unsigned location, unsigned count, bool tr, float* values);
+		void uniform_1ui(unsigned location, unsigned value);
 	};
 
 	class framebuffer : public gennable, public bindable {
@@ -341,6 +342,7 @@ namespace gl {
 	void draw_arrays(primitive_type pt, unsigned start, unsigned count, program& prog);
 	void draw_arrays(primitive_type pt, unsigned start, unsigned count, program& prog,
 		vertex_array& vao, std::initializer_list<std::pair<unsigned, texture*>> texture_units = {});
+	void active_texture(texture& tex, unsigned index);
 
 	enum message_source :unsigned {
 	};

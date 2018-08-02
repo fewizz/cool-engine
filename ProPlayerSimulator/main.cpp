@@ -1,17 +1,20 @@
 #include <iostream>
 #include <memory>
-#define GLFW_INCLUDE_NONE
-#include "GLFW/glfw3.h"
-#include "gl.h"
-#include "lodepng.h"
 #include <string>
 #include <vector>
 #include <initializer_list>
-#include "asset_loader.h"
+
+#include "gl.h"
+#include "assets_loader.h"
+#include "renderer.h"
+#include "camera.h"
+
+#define GLFW_INCLUDE_NONE
+#include "GLFW/glfw3.h"
+
 #include "glm/glm.hpp"
 #include "glm/mat4x4.hpp"
 #include "glm/gtc/matrix_transform.hpp"
-#include "renderer.h"
 
 #define DEF_W 1000
 #define DEF_H 600
@@ -41,8 +44,7 @@ int main() {
 		debug({ "GL: ", message });
 	});
 
-	glm::mat4 vm{};
-	glm::mat4 pm = glm::ortho(-DEF_W / 2.f, DEF_W / 2.f, -DEF_H / 2.f, DEF_H / 2.f, 0.f, 1.f);
+	game::proj = glm::ortho(-DEF_W / 2.f, DEF_W / 2.f, -DEF_H / 2.f, DEF_H / 2.f, 0.f, 1.f);
 
 	clear_color(0, 0, 0, 1);
 
@@ -50,7 +52,7 @@ int main() {
 
 	while (!glfwWindowShouldClose(window)) {
 		clear({color_buffer});
-		rend.render(pm);
+		rend.render();
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}

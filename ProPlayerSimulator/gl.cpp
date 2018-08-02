@@ -107,6 +107,7 @@ namespace gl {
 		use();
 		glUniformMatrix4fv(location, count, tr, values);
 	}
+	void program::uniform_1ui(unsigned location, unsigned value) { use(); glUniform1ui(location, value); }
 
 	//
 	void draw_arrays(primitive_type pt, unsigned start, unsigned count, program& prog) {
@@ -118,12 +119,16 @@ namespace gl {
 		vertex_array& vao, std::initializer_list<std::pair<unsigned, texture*>> texture_units) {
 
 		for (std::pair<unsigned, texture*> p : texture_units) {
-			glActiveTexture(GL_TEXTURE0 + p.first);
-			p.second->bind();
+			active_texture(*p.second, p.first);
 		}
 
 		vao.bind();
 		draw_arrays(pt, start, count, prog);
+	}
+
+	void active_texture(texture& tex, unsigned index) {
+		glActiveTexture(GL_TEXTURE0 + index);
+		tex.bind();
 	}
 
 	void debug_message_callback(
