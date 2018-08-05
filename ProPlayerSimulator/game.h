@@ -1,7 +1,3 @@
 #pragma once
 
-namespace game {
-	void start() {
-
-	}
-}
+void start();

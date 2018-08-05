@@ -3,13 +3,23 @@
 #include "gui.h"
 #include "gl.h"
 #include "glm/vec2.hpp"
+#include "renderer.h"
 
-class textured_button : public gui::rectangle_button<glm::vec2, glm::vec2>{
-	gl::texture_2d tex;
 
-	textured_button() {
+namespace gui {
+	class textured_button : public gui::rectangle_button {
+		quad_renderer rend;
 
-	}
+	public:
+		textured_button(float w, float h, float x, float y)
+			: rend{ {x, y}, {x, y + h}, {x + w, y + h}, {x + w, h} } {}
 
-	virtual void render() override {};
-};
+		void texture(gl::texture_2d* tex) {
+			rend.texture(tex);
+		}
+
+		void render() override {
+			rend.render();
+		}
+	};
+}

@@ -76,6 +76,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="camera.cpp" />
+    <ClCompile Include="game.cpp" />
     <ClCompile Include="gl.cpp" />
     <ClCompile Include="lodepng.cpp" />
     <ClCompile Include="main.cpp" />
@@ -84,13 +85,16 @@
   <ItemGroup>
     <ClInclude Include="assets_loader.h" />
     <ClInclude Include="camera.h" />
+    <ClInclude Include="font.h" />
     <ClInclude Include="game.h" />
     <ClInclude Include="gl.h" />
     <ClInclude Include="gui.h" />
     <ClInclude Include="hero.h" />
     <ClInclude Include="main_screen.h" />
+    <ClInclude Include="renderable.h" />
     <ClInclude Include="renderer.h" />
     <ClInclude Include="textured_button.h" />
+    <ClInclude Include="updatable.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

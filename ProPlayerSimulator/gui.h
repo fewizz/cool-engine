@@ -1,86 +1,80 @@
 #pragma once
 #include <vector>
+#include <glm/vec2.hpp>
+#include "renderable.h"
+#include "updatable.h"
+
 
 namespace gui {
+	class interface_element : public updatable, public renderable {};
 
-	class interface_element {
-	public:
-		virtual void update() = 0;
-		virtual void render() = 0;
-	};
-
-	template<class Pos>
 	class with_position {
-		virtual Pos get_pos() = 0;
-	};
-
-	template<class Pos>
-	class with_changeable_position:public virtual with_position<Pos> {
-		virtual void set_pos() = 0;
-	};
-
-	template<class Pos>
-	class with_position_state:public virtual with_position<Pos> {
-	protected:
-		Pos pos_state;
 	public:
-		virtual Pos get_pos() override { return pos_state; }
+		virtual glm::vec2 get_pos() = 0;
 	};
 
-	class screen:public interface_element {
-		std::vector<interface_element> childs;
+	class with_changeable_position :public with_position {
+	public:
+		virtual void set_pos(glm::vec2) = 0;
+	};
 
+	class with_position_state :public virtual with_changeable_position {
+	protected:
+		glm::vec2 pos_state;
+	public:
+		glm::vec2 get_pos() override { return pos_state; }
+		void set_pos(glm::vec2 pos) override { pos_state = pos; }
+	};
+
+	/*class interface_element_with_childs :public interface_element {
+		std::vector<interface_element> childs;
 	public:
 		std::vector<interface_element>& childs() { return childs; }
 
-		void update() {
+		void update() override {
 			for (auto &c : childs)
 				c.update();
 		}
 
-		void render() {
+		void render() override {
 			for (auto &c : childs)
 				c.render();
 		}
-	};
+	};*/
 
 	class pressable {
 	public:
 		virtual void press() {};
 	};
 
-	template<class Dim>
 	class with_dimesion {
-		virtual Dim get_dim() = 0;
+		virtual glm::vec2 get_dim() = 0;
 	};
 
-	template<class Dim>
-	class with_changeable_dimension:public virtual with_dimesion<Dim>{
-		virtual void set_dim(Dim d) = 0;
+	class with_changeable_dimension :public with_dimesion {
+		virtual void set_dim(glm::vec2) = 0;
 	};
 
-	template<class Dim>
-	class with_dimension_state:public virtual with_dimesion<Dim> {
+	class with_dimension_state :public with_changeable_dimension {
 	protected:
-		Dim dim_state;
+		glm::vec2 dim_state;
 	public:
-		virtual Dim get_dim() override { return dim_state; }
-	};
-
-	template<class Dim>
-	class with_changeable_dimension_state:public virtual with_dimension_state<Dim>, public virtual with_changeable_dimension<Dim> {
-	public:
-		virtual void set_dim(Dim d) override { dim_state = d; }
+		glm::vec2 get_dim() override { return dim_state; }
+		void set_dim(glm::vec2 dim) override { dim_state = dim; }
 	};
 
 	class unclaspable {
 		virtual void unclasp() {};
 	};
 
-	template<class Pos, class Dim>
-	class rectangle_button : public virtual interface_element, public virtual with_position<Pos>, public pressable, public unclaspable, public virtual with_dimesion<Dim> {
+	class rectangle_button
+		: public interface_element, 
+		public with_position, public with_dimesion, 
+		public pressable,
+		public unclaspable
+	{
 		bool is_pressed{ false };
-	public :
+	public:
 		void press() override { is_pressed = true; }
 		void unclasp() override { is_pressed = false; }
 	};
