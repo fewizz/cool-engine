@@ -18,9 +18,12 @@ namespace al {
 
 	class context {
 		friend context&& device::create_context();
+		friend void make_context_current(context&);
 		void* alc_context_ptr_;
 		context(void* alc_context_ptr_) :alc_context_ptr_{ alc_context_ptr_ } {}
 	};
+
+	unsigned get_error();
 
 	class with_name {
 	protected:
@@ -48,8 +51,24 @@ namespace al {
 				del();
 		}
 	};
+	namespace internal {
+		enum source_param {
+			source_relative = 0x202,
+			cone_inner_angle = 0x1001,
+			cone_outer_angle = 0x1002,
+			looping = 0x1007,
+			buffer = 0x1009,
+			source_state = 0x1010
+		};
+	}
 	class buffer : public with_name {
-		static unsigned al_gen();
+		static void al_gen(int n, unsigned* buffers);
+		static unsigned gen() {
+			unsigned name;
+			al_gen(1, &name);
+			return name;
+		}
+		static void al_data(unsigned name, unsigned format, void* data, int size, int frequency);
 	public:
 		enum class format {
 			mono8 = 0x1100,
@@ -57,17 +76,35 @@ namespace al {
 			stereo8,
 			stereo16
 		};
-		buffer():with_name(al_gen()) {}
+		buffer():with_name(gen()) {}
 
 		template<class RAI>
-		void data(format fmt, RAI begin, RAI end, size_t frequency) {
+		void data(format fmt, RAI begin, RAI end, int frequency) {
+			al_data(name, static_cast<unsigned>(fmt), begin, std::distance(begin, end), frequency);
+		}
 
+		template<class RAI>
+		void data(int channels, int bits, RAI begin, RAI end, int frequency) {
+			data(static_cast<al::buffer::format>
+				(0x1100 + (channels - 1) * 2 + bits / 8 - 1), begin, end, frequency);
 		}
 	};
 
 	class source : public with_name {
-
+		static void al_gen(int n, unsigned* sources);
+		static unsigned gen() {
+			unsigned name;
+			al_gen(1, &name);
+			return name;
+		}
+		static void al_i(unsigned source, unsigned param, int value);
 	public:
-		source():withc
+		source() :with_name{ gen() } {}
+
+		void buffer(al::buffer& buf) {
+			al_i(name, internal::source_param::buffer, buf.name);
+		}
+
+		void play();
 	};
 }

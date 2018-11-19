@@ -5,10 +5,21 @@
 
 namespace audio {
 
-	typedef std::unique_ptr<char[]> audio_data;
-
-	class audio_data_provider {
+	/*class sample_array {
+		unique_ptr<char[]> data;
+		size_t size;
 	public:
-		virtual audio_data next() = 0;
+		sample_array(unique_ptr<char[]> data, size_t size) :data{ data }, size{size} {}
+		size_t size() {
+			return size;
+		}
+		char& operator*() {
+			return *data;
+		}
+	};*/
+
+	class sample_provider {
+	public:
+		virtual void get(char* ptr, size_t size) = 0;
 	};
 }

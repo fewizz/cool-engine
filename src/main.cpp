@@ -20,16 +20,39 @@ using namespace gl;
 using namespace std;
 using namespace filesystem;
 
-int main() {
+/*int main0() {
 	path p("C:\\Program Files (x86)\\OpenAL 1.1 SDK\\samples\\media\\stereo.wav");
 	ifstream stream(p, std::ios::binary);
 	wav::wav_audio_data_provider<ifstream> d{stream};
 	d.next();
-}
+}*/
 
-int main0() {
+int main() {
 	al::device al_dev = al::open_device();
 	al::context al_context = al_dev.create_context();
+	al::make_context_current(al_context);
+
+	cout << al::get_error() << "\n";
+
+	al::buffer buff;
+	al::source src;
+
+	cout << al::get_error() << "\n";
+
+	path p2("C:\\Program Files (x86)\\OpenAL 1.1 SDK\\samples\\media\\stereo.wav");
+	ifstream stream2(p2, std::ios::binary);
+	wav::wave_sample_provider<ifstream> d{ stream2 };
+	char* samples = new char[d.data_block_size()];
+	d.get(samples, d.data_block_size());
+	//d.next();
+	//buff.data(al::buffer::format::mono16, ;;
+	buff.data(d.channels(), d.bits_per_sample(), samples, samples + d.data_block_size(), d.sample_rate());
+
+	cout << al::get_error() << "\n";
+	//src.buffer();
+	src.play();
+
+	cout << al::get_error() << "\n";
 
 	path p("C:\\Windows\\Fonts\\comic.ttf");
 	ifstream stream(p, std::ios::binary);
@@ -143,5 +166,4 @@ void main() {
 	}
 
 	glfwTerminate();
-	return 0;
 }

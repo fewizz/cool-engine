@@ -15,9 +15,12 @@ namespace wav {
 	};
 
 	template<class IStream>
-	class wav_audio_data_provider : public audio::audio_data_provider {
+	class wave_sample_provider : public audio::sample_provider {
 		IStream& stream;
 		uint32_t wave_chunks_bytes;
+		int16_t samples_to_read = -1;
+		bool odd = false;
+		//uint16_t last_size = 0;
 
 		struct {
 			format_tag tag;
@@ -26,14 +29,19 @@ namespace wav {
 			uint32_t data_rate;
 			uint16_t data_block_size;
 			uint16_t bits_per_sample;
-			uint16_t size_of_extension;
-			uint16_t number_of_valid_bits;
-			uint32_t speaker_position_mask;
+			//uint16_t size_of_extension;
+			//uint16_t number_of_valid_bits;
+			//uint32_t speaker_position_mask;
 		} data_format;
 
 		void* sub_data;
 	public:
-		wav_audio_data_provider(IStream& stream) :stream{stream} {
+		uint16_t channels() { return data_format.channels; }
+		uint16_t sample_rate() { return data_format.sample_rate; }
+		uint16_t bits_per_sample() { return data_format.bits_per_sample; }
+		uint16_t data_block_size() { return data_format.data_block_size; }
+
+		wave_sample_provider(IStream& stream) :stream{ stream} {
 			typedef std::char_traits<char> ch_traits;
 			char temp_4[4];
 
@@ -54,29 +62,27 @@ namespace wav {
 
 			stream.read(temp_4, 4);
 			auto chunk_size = *((uint32_t*)temp_4);
+			if(chunk_size != 16)
+				throw std::exception("unsupported");
 
 			stream.read((char*)(&data_format), chunk_size);
-			//stream.ignore(16);
 		}
 
-		audio::audio_data next() override {
+		void get(char* ptr, size_t size) override {
 			typedef std::char_traits<char> ch_traits;
-			char temp_4[4];
 
-			stream.read(temp_4, 4);
-			if (ch_traits::compare(temp_4, "data", 4) != 0)
-				throw std::exception("invalid data");
+			if (to_read == -1) {
+				char temp_4[4];
 
-			uint32_t size;
-			stream.read((char*)&size, 4);
+				stream.read(temp_4, 4);
+				if (ch_traits::compare(temp_4, "data", 4) != 0)
+					throw std::exception("invalid data");
 
-			auto data = std::make_unique<char[]>(size);
-			stream.read(data.get(), size);
+				stream.read((char*)&samples_to_read, 4);
+				odd = samples_to_read % 2 != 0;
+			}
 
-			if (size % 2 != 0)
-				stream.ignore(1);
-
-			return std::move(data);
+			stream.read(ptr, samples_to_read);
 		}
 	};
 }
