@@ -18,9 +18,8 @@ namespace wav {
 	class wave_sample_provider : public audio::sample_provider {
 		IStream& stream;
 		uint32_t wave_chunks_bytes;
-		int16_t samples_to_read = -1;
+		int16_t to_read = -1;
 		bool odd = false;
-		//uint16_t last_size = 0;
 
 		struct {
 			format_tag tag;
@@ -29,12 +28,20 @@ namespace wav {
 			uint32_t data_rate;
 			uint16_t data_block_size;
 			uint16_t bits_per_sample;
-			//uint16_t size_of_extension;
-			//uint16_t number_of_valid_bits;
-			//uint32_t speaker_position_mask;
 		} data_format;
 
 		void* sub_data;
+		void read_data_info() {
+			typedef std::char_traits<char> ch_traits;
+			char temp_4[4];
+
+			stream.read(temp_4, 4);
+			if (ch_traits::compare(temp_4, "data", 4) != 0)
+				throw std::exception("invalid data");
+
+			stream.read((char*)&to_read, 4);
+			odd = to_read % 2 != 0;
+		}
 	public:
 		uint16_t channels() { return data_format.channels; }
 		uint16_t sample_rate() { return data_format.sample_rate; }
@@ -71,18 +78,27 @@ namespace wav {
 		void get(char* ptr, size_t size) override {
 			typedef std::char_traits<char> ch_traits;
 
-			if (to_read == -1) {
-				char temp_4[4];
+			while (size != 0) {
+				if (to_read == -1)
+					read_data_info();
 
-				stream.read(temp_4, 4);
-				if (ch_traits::compare(temp_4, "data", 4) != 0)
-					throw std::exception("invalid data");
+				stream.read(ptr, size);
+				int read = stream.gcount();
+				to_read -= read;
+				ptr += read;
+				size -= read;
 
-				stream.read((char*)&samples_to_read, 4);
-				odd = samples_to_read % 2 != 0;
+				if (to_read == 0)
+					to_read = -1;
+				if (read == 0)
+					break;
 			}
+		}
 
-			stream.read(ptr, samples_to_read);
+		int16_t available() {
+			if (to_read == -1)
+				read_data_info();
+			return to_read;
 		}
 	};
 }

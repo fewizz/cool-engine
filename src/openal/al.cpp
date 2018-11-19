@@ -7,7 +7,7 @@
 
 al::device&& al::open_device(std::string device_name) {
 	ALCdevice* device = alcOpenDevice(device_name.length() == 0 ? nullptr : device_name.c_str());
-	if (!device) {
+	if (device == nullptr) {
 		throw std::exception("Error when opening AL device");
 	}
 	return device;

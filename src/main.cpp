@@ -42,14 +42,15 @@ int main() {
 	path p2("C:\\Program Files (x86)\\OpenAL 1.1 SDK\\samples\\media\\stereo.wav");
 	ifstream stream2(p2, std::ios::binary);
 	wav::wave_sample_provider<ifstream> d{ stream2 };
-	char* samples = new char[d.data_block_size()];
-	d.get(samples, d.data_block_size());
+	unsigned s_size = 400000;
+	char* samples = new char[s_size];
+	d.get(samples, s_size);
 	//d.next();
 	//buff.data(al::buffer::format::mono16, ;;
-	buff.data(d.channels(), d.bits_per_sample(), samples, samples + d.data_block_size(), d.sample_rate());
+	buff.data(d.channels(), d.bits_per_sample(), samples, samples + s_size, d.sample_rate());
 
 	cout << al::get_error() << "\n";
-	//src.buffer();
+	src.buffer(buff);
 	src.play();
 
 	cout << al::get_error() << "\n";
