@@ -15,6 +15,7 @@
 #include "glm/ext/matrix_transform.hpp"
 #include "openal/al.hpp"
 #include "wav.hpp"
+#include "gui.hpp"
 
 using namespace gl;
 using namespace std;
@@ -66,12 +67,14 @@ int main() {
 	//face.load_glyph(83);
 
 	GLFWwindow* window;
+	int w = 800;
+	int h = 600;
 
 	if (!glfwInit())
 		return -1;
 
 	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
-	window = glfwCreateWindow(800, 600, "Hello", NULL, NULL);
+	window = glfwCreateWindow(w, h, "Hello", NULL, NULL);
 	if (!window)
 	{
 		glfwTerminate();
@@ -84,36 +87,6 @@ int main() {
 		const char* message, const void* userParam) {
 		std::cout << message << "\n";
 	});
-
-	/*renderer_verticies triangle{ program{
-		vertex_shader(R"(
-#version 420 core
-
-layout(location = 0) in vec2 pos;
-
-void main() {
-	gl_Position = vec4(pos, 0, 1);
-}
-
-)"),
-		fragment_shader(R"(
-#version 420 core
-
-out vec4 color;
-
-void main() {
-	color = vec4(1, 1, 1, 1);
-}
-)")
-		}, gl::primitive_type::triangles};
-
-	triangle.vertex_attrib_data(vertex_attribute::location{ 0 }, vertex_attribute::size{ 2 }, vertex_attribute::normalized{ false },
-		std::vector<float> {
-			0.0, 0.0,
-			1.0, 0.0,
-			1.0, 1.0,
-		}
-	);*/
 
 	text_renderer tr{ u8"Так хмхмхм\nТы тута ?\nТобе куды песат ? ", face, make_shared<program>(
 	vertex_shader{R"(
@@ -144,19 +117,39 @@ in flat int texture_unit_vs;
 out vec4 color;
 
 void main() {
-	//color = texture(u_textures[texture_unit_vs], uv_vs + vec2(0.02, 0.02)) * vec4(1, 0, 0, 1);
-	//color -= texture(u_textures[texture_unit_vs], uv_vs) * vec4(1, 0, 0, 1);
-	//color += texture(u_textures[texture_unit_vs], uv_vs) * vec4(0, 1, 0, 1);
-
 	color = texture(u_textures[texture_unit_vs], uv_vs);
 }
 
 )"}
 	) };
-	tr.matrix("u_mat", glm::translate(glm::ortho(-400.0f, 400.0f, -300.0f, 300.0f), glm::vec3(-300.0, 200.0, 0.0)));
+	tr.matrix("u_mat", [&w, &h]() {
+		return glm::ortho(-(float)w / 2.0f, (float)w / 2.0f, -(float)h / 2.0f, (float)h / 2.0f);
+	});
+
+	class main_menu_screen : public gui::square_view {
+		class button : public gui::square_view {
+			std::string title;
+			text_renderer renderer;
+		public:
+			button(std::string title) :title{title} {
+
+			}
+
+			void render() override {}
+			void update() override {}
+		} start, quit;
+
+	public:
+		void render() override {
+			start.render();
+		}
+		void update() override {}
+	} main_menu;
 
 	while (!glfwWindowShouldClose(window))
 	{
+		glfwGetFramebufferSize(window, &w, &h);
+		viewport(0, 0, w, h);
 		clear_color(0, 0, 0, 1);
 		clear({ color_buffer });
 

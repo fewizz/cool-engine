@@ -201,6 +201,10 @@ namespace gl {
 		glClear(r);
 	}
 
+	void viewport(int x, int y, unsigned w, unsigned h) {
+		glViewport(x, y, w, h);
+	}
+
 	void vertex_attrib2fv(unsigned index, const float * values) {
 		glVertexAttrib2fv(index, values);
 	}

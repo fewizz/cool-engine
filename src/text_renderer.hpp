@@ -6,13 +6,13 @@
 #include <string>
 #include "utf8.h"
 
-class text_renderer : public renderer_verticies {
+class text_renderer : public verticies_renderer {
 	std::vector<gl::texture_2d*> glyph_textures;
 	std::string text;
 	std::vector<int> textures_array_texture_units;
 public:
 	text_renderer(std::string str, freetype::face& face, std::shared_ptr<gl::program> program)
-		:renderer_verticies(program, gl::primitive_type::triangles), text{str} {
+		:verticies_renderer(program, gl::primitive_type::triangles), text{str} {
 
 		std::vector<float> positions;
 		std::vector<unsigned> tex_units;

@@ -177,16 +177,6 @@ namespace gl {
 		}
 	};
 
-	//typedef buffer<buffer_target::array> array_buffer;
-#define GL_BUFF_SUBTYPE(className, enumName)\
-	class className : public buffer {\
-	public:\
-		className(unsigned name) : buffer(name){} \
-		className() : buffer(buffer_target::enumName) {}\
-		buffer_target target() override { return buffer_target::enumName; }\
-	};
-
-	//GL_BUFF_SUBTYPE(array_buffer, array)
 	class array_buffer : public buffer {
 	public:
 		array_buffer(unsigned name) : buffer(name){} 
@@ -194,7 +184,12 @@ namespace gl {
 		buffer_target target() override { return buffer_target::array; }
 	};
 
-#undef GL_BUFF_SUBTYPE
+	class element_array_buffer : public buffer {
+	public:
+		element_array_buffer(unsigned name) : buffer(name) {}
+		element_array_buffer() : buffer(buffer_target::element_array) {}
+		buffer_target target() override { return buffer_target::element_array; }
+	};
 
 	enum primitive_type :unsigned;
 	void draw_arrays(primitive_type pt, unsigned start, unsigned count, std::shared_ptr<program> prog);
@@ -459,8 +454,12 @@ namespace gl {
 	};
 
 	enum primitive_type :unsigned {
-		triangles = 0x0004,
-		triangles_fan = 0x0006
+		lines = 1,
+		line_loop,
+		line_strip,
+		triangles,
+		triangle_strip,
+		triangle_fan
 	};
 	void active_texture(texture& tex, unsigned index);
 
@@ -510,6 +509,9 @@ namespace gl {
 	};
 	void clear_color(float r, float g, float b, float a);
 	void clear(std::initializer_list<clear_buffer> mask);
+
+	void viewport(int x, int y, unsigned w, unsigned h);
+
 	void vertex_attrib2fv(unsigned index, const float* values);
 	void vertex_attrib4fv(unsigned index, const float* values);
 }
