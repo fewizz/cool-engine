@@ -32,7 +32,7 @@ find_package(OpenAL REQUIRED)
 
 include_directories(libs/include/ src/ ${OPENGL_INCLUDE_DIR} ${OPENAL_INCLUDE_DIR})
 
-target_link_libraries(cool ${LIB_DIR}/glfw3.lib)
+#target_link_libraries(cool ${LIB_DIR}/glfw3.lib)
 target_link_libraries(cool ${LIB_DIR}/glew32s.lib)
 target_link_libraries(cool ${OPENGL_LIBRARIES})
 target_link_libraries(cool ${OPENAL_LIBRARY})
@@ -46,6 +46,7 @@ file(GLOB_RECURSE TEXT_RENDERER_FILES
 add_executable(text_renderer ${TEXT_RENDERER_FILES})
 set_property(TARGET text_renderer PROPERTY CXX_STANDARD 17)
 target_link_libraries(text_renderer cool)
-include_directories(src/)
+target_link_libraries(cool ${LIB_DIR}/glfw3.lib)
+include_directories(libs/include/ src/)
 
 source_group("Files" FILES ${TEXT_RENDERER_FILES})
