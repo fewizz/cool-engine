@@ -13,7 +13,7 @@ namespace gl {
 	template<class T>
 	std::shared_ptr<T> view(unsigned name) {
 		T* ptr = new T(name);
-		return std::shared_ptr<T>( ptr, [](T* p) {p->invalidate_name();  delete[] p; } );
+		return std::shared_ptr<T>( ptr, [](T* p) {p->invalidate_name();  delete p; } );
 	}
 
 	template<class T>

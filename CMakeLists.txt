@@ -46,10 +46,10 @@ file(GLOB_RECURSE TEXT_RENDERER_FILES
 add_executable(text_renderer ${TEXT_RENDERER_FILES})
 set_property(TARGET text_renderer PROPERTY CXX_STANDARD 17)
 target_link_libraries(text_renderer cool)
-target_link_libraries(cool ${LIB_DIR}/glfw3.lib)
+target_link_libraries(text_renderer ${LIB_DIR}/glfw3.lib)
 include_directories(libs/include/ src/)
 
-source_group("Files" FILES ${OPENAL_FILES})
+source_group("Files" FILES ${TEXT_RENDERER_FILES})
 
 #openal
 file(GLOB_RECURSE OPENAL_FILES
@@ -62,3 +62,16 @@ target_link_libraries(openal cool)
 include_directories(src/)
 
 source_group("Files" FILES ${OPENAL_FILES})
+
+# gui
+file(GLOB_RECURSE GUI_FILES
+	./demo/gui/*.cpp
+	./demo/gui/*.hpp)
+	
+add_executable(gui ${GUI_FILES})
+set_property(TARGET gui PROPERTY CXX_STANDARD 17)
+target_link_libraries(gui cool)
+target_link_libraries(gui ${LIB_DIR}/glfw3.lib)
+include_directories(libs/include/ src/)
+
+source_group("Files" FILES ${GUI_FILES})

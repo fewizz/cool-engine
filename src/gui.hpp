@@ -9,17 +9,12 @@ namespace gui {
 	};
 
 	class square_view : public virtual view {
-		/*enum origin_meaning {
-			center,
-			left_up,
-			left_bot,
-			right_up,
-			right_bot
-		};*/
 	};
 
-	/*class button : public view {
+	class pressable {
 		virtual void press() = 0;
 		virtual void unpress() = 0;
-	};*/
+	};
+
+	
 }
