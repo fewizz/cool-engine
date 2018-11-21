@@ -24,7 +24,7 @@ set_property(TARGET cool PROPERTY CXX_STANDARD 17)
 
 source_group("Core Files" FILES ${CORE_HPP} ${CORE_CPP})
 source_group("OpenGL Files" FILES ${OPENGL_HPP} ${OPENGL_CPP})
-source_group("OpenAL Files" FILES ${OPENAL_HPP}, ${OPENAL_CPP})
+source_group("OpenAL Files" FILES ${OPENAL_HPP} ${OPENAL_CPP})
 
 find_package(OpenGL REQUIRED)
 set(CMAKE_SYSTEM_FRAMEWORK_PATH ${CMAKE_SYSTEM_FRAMEWORK_PATH}, "C:/Program Files (x86)/OpenAL 1.1 SDK")
@@ -49,4 +49,16 @@ target_link_libraries(text_renderer cool)
 target_link_libraries(cool ${LIB_DIR}/glfw3.lib)
 include_directories(libs/include/ src/)
 
-source_group("Files" FILES ${TEXT_RENDERER_FILES})
+source_group("Files" FILES ${OPENAL_FILES})
+
+#openal
+file(GLOB_RECURSE OPENAL_FILES
+	./demo/openal/*.cpp
+	./demo/openal/*.hpp)
+	
+add_executable(openal ${OPENAL_FILES})
+set_property(TARGET openal PROPERTY CXX_STANDARD 17)
+target_link_libraries(openal cool)
+include_directories(src/)
+
+source_group("Files" FILES ${OPENAL_FILES})

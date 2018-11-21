@@ -3,34 +3,39 @@
 #include "opengl/gl.hpp"
 #include <exception>
 #include <iterator>
+#define LOG_DESTRUCT 1
 
 namespace gl {
-	/*template<class T>
-	object_view<T> wrap_globject(unsigned name) {
-		T* o = (T*)(&name);
-		return object_view(std::move(*o));
-	}*/
 
 	context* wrap_context() {
 		glewInit();
 		return new context{};
 	}
-	// fence_sync
+
+	/* With name */
+	//gl::with_name::~with_name() {}
+
+	/* Fence sync */
 	fence_sync::fence_sync() :ptr{ glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0) } {}
 	sync_status client_wait_sync(fence_sync s, unsigned timeout) { 
 		return static_cast<sync_status>(glClientWaitSync(reinterpret_cast<GLsync>(s.ptr), GL_SYNC_FLUSH_COMMANDS_BIT, timeout)); 
 	}
 	void wait_sync(fence_sync s) { glWaitSync(reinterpret_cast<GLsync>(s.ptr), 0, GL_TIMEOUT_IGNORED); }
 
-	// query
+	/* Query */
 	unsigned query::gl_gen() { return 0; };
 
-	// buffer
+	/* Buffer */
 	unsigned buffer::gl_gen() { unsigned n; glGenBuffers(1, &n); return n; }
 	void buffer::gl_bind(unsigned t, unsigned n) {
 		glBindBuffer(t, n);
 	}
-	void buffer::del() { glDeleteBuffers(1, &name); invalidate_name(); }
+	buffer::~buffer() {
+		glDeleteBuffers(1, &name); invalidate_name();
+#if LOG_DESTRUCT
+		std::cout << "buffer destruct\n";
+#endif
+	}
 
 	void buffer::gl_parameteriv(unsigned tar, unsigned value, int* data) {
 		glGetBufferParameteriv(tar, value, data);
@@ -41,7 +46,7 @@ namespace gl {
 		glBufferData(target(), bytes, data, usage);
 	}
 
-	// vertex_array
+	/* Vertex array */
 	unsigned vertex_array::gl_gen() {
 		unsigned name;
 		glGenVertexArrays(1, &name);
@@ -51,7 +56,12 @@ namespace gl {
 	void vertex_array::gl_get_attribiv(unsigned index, unsigned pname, int* params) {
 		glGetVertexAttribiv(index, pname, params);
 	}
-	void vertex_array::del() { glDeleteBuffers(1, &name); invalidate_name(); }
+	vertex_array::~vertex_array() {
+		glDeleteVertexArrays(1, &name); invalidate_name();
+#if LOG_DESTRUCT
+		std::cout << "va destruct\n";
+#endif
+	}
 
 	void vertex_array::gl_vertex_attrib_pointer(unsigned index, unsigned size, unsigned type, bool normalized, unsigned stride, void* pointer) {
 		glVertexAttribPointer(index, size, type, normalized, stride, nullptr);
@@ -66,7 +76,7 @@ namespace gl {
 		glEnableVertexAttribArray(index);
 	}
 
-	// texture
+	/* Texture */
 	unsigned texture::gl_gen() {
 		unsigned name;
 		glGenTextures(1, &name);
@@ -76,9 +86,14 @@ namespace gl {
 		glBindTexture(tar, name);
 	}
 	void texture::bind() { gl_bind(target(), name); }
-	void texture::del() { glDeleteBuffers(1, &name); invalidate_name(); }
+	texture::~texture() {
+		glDeleteTextures(1, &name); invalidate_name();
+#if LOG_DESTRUCT
+		std::cout << "texture destruct\n";
+#endif
+	}
 
-	// texture2d
+	/* Texture2D */
 	void texture_2d::gl_tex_sub_image_2d(unsigned target, unsigned level, unsigned xo, unsigned yo, unsigned w, unsigned h, unsigned format, unsigned type, void* p) {
 		glTexSubImage2D(target, level, xo, yo, w, h, format, type, p);
 	}
@@ -96,20 +111,26 @@ namespace gl {
 		glTexStorage2D(target(), levels, if_, w, h);
 	}
 
-	// sampler
+	/* Sampler */
 	unsigned sampler::gl_gen() { 
 		unsigned name;
 		glGenSamplers(1, &name);
 		return name;
 	}
-	void sampler::del() { glDeleteSamplers(1, &name); }
+	sampler::~sampler() { glDeleteSamplers(1, &name); invalidate_name(); }
 
 	void sampler::texture_wrap_s(wrap_mode wm) { glSamplerParameteri(name, GL_TEXTURE_WRAP_S, wm); }
 	void sampler::texture_wrap_t(wrap_mode wm) { glSamplerParameteri(name, GL_TEXTURE_WRAP_T, wm); }
 	void sampler::texture_wrap_r(wrap_mode wm) { glSamplerParameteri(name, GL_TEXTURE_WRAP_R, wm); }
-	// shader
+
+	/* Shader */
 	unsigned shader::gl_create(shader::shader_type type) { return glCreateShader(type); }
-	void shader::del() { glDeleteShader(name); invalidate_name(); }
+	shader::~shader() {
+		glDeleteShader(name); invalidate_name();
+#if LOG_DESTRUCT
+		std::cout << "shader destruct\n";
+#endif
+	}
 
 	void shader::source(std::string src) {
 		const char* s { src.c_str() };
@@ -129,9 +150,14 @@ namespace gl {
 		}
 	}
 
-	// program
+	/* Program */
 	unsigned program::gl_create() { return glCreateProgram(); }
-	void program::del() { glDeleteProgram(name); invalidate_name(); }
+	program::~program() {
+		glDeleteProgram(name); invalidate_name();
+#if LOG_DESTRUCT
+		std::cout << "program destruct\n";
+#endif
+	}
 
 	void program::attach(const shader& sh) { glAttachShader(name, sh.name); }
 	void program::link() { glLinkProgram(name); }

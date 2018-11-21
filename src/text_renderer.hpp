@@ -23,9 +23,6 @@ public:
 		long penY = 0;
 		unsigned last_index = 0;
 
-		//auto begin = str.begin();
-		//auto end = str.end();
-
 		for (auto begin = str.begin(); begin != str.end();) {
 			uint32_t code_point = utf8::next(begin, str.end());
 
@@ -39,11 +36,11 @@ public:
 			auto bitmap = glyph.get_bitmap();
 
 			freetype::glyph::metrics metrics = glyph.get_metrics();
-			float scaleX = 1.0 / 64.0;//(1.0 / 64.0) * (1.0 / 800.0);
-			float scaleY = 1.0 / 64.0;//(1.0 / 64.0) * (1.0 / 600.0);
+			float scaleX = 1.0 / 64.0;
+			float scaleY = 1.0 / 64.0;
 
 			float left = (penX + metrics.horizontal_bearing_x()) * scaleX;
-			float right = (penX + metrics.width()) * scaleX;
+			float right = (penX + metrics.horizontal_bearing_x() + metrics.width()) * scaleX;
 			float bot = (penY + metrics.horizontal_bearing_y() - metrics.height()) * scaleY;
 			float top = (penY + metrics.horizontal_bearing_y()) * scaleY;
 

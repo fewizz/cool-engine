@@ -6,7 +6,6 @@
 #include <vector>
 #include <iostream>
 #include <map>
-//#include <cstdlib>
 #include <array>
 #include <memory>
 
@@ -51,10 +50,9 @@ namespace gl {
 		void invalidate_name() {
 			name = invalid_name;
 		}
-		virtual void del() {}
 	public:
-		with_name(unsigned name) :name{name}{}
-		with_name(with_name&& o) :name{ o.name } { 
+		with_name(unsigned name):name{name}{}
+		with_name(with_name&& o):name{ o.name } { 
 			o.invalidate_name();
 		}
 
@@ -65,14 +63,11 @@ namespace gl {
 		}
 
 		unsigned name{ invalid_name };
-		virtual ~with_name() {
-			if (name)
-				del();
-		}
+		//virtual ~with_name() = 0;
 	};
-	class bindable:public with_name {
+
+	class bindable {
 	protected:
-		bindable(unsigned name) :with_name(name) {}
 		virtual void bind() = 0;
 	};
 
@@ -122,7 +117,7 @@ namespace gl {
 		static_draw = 0x88E4
 	};
 
-	class buffer : public bindable {
+	class buffer : public with_name, bindable {
 		friend vertex_array;
 		friend texture_2d;
 	protected:
@@ -133,23 +128,14 @@ namespace gl {
 			pixel_unpack = 0x88EC
 		};
 
-		/*template <buffer_target T>
-		class gl_buffer : public buffer {
-			gl_buffer() :{T} {}
-
-			buffer_target get_target() override {
-				return T;
-			}
-		};*/
-
 		static unsigned gl_gen();
 		static void gl_bind(unsigned target, unsigned name);
 		static void gl_parameteriv(unsigned tar, unsigned value, int* data);
 
-		buffer(buffer_target tar):bindable(gl_gen()) {
+		buffer(buffer_target tar) : with_name{ gl_gen() } {
 			gl_bind(tar, name);
 		}
-		buffer(unsigned name) : bindable(name) {}
+		buffer(unsigned name) : with_name{ name } {}
 
 		virtual buffer_target target() = 0;
 
@@ -157,8 +143,7 @@ namespace gl {
 
 		void data(size_t bytes, const void * data, buffer_usage usage = buffer_usage::static_draw);
 	public:
-		void del() override;
-
+		~buffer();
 		template<class T>
 		void data(T container, buffer_usage usage = buffer_usage::static_draw) {
 			data(container.begin(), container.end(), usage);
@@ -179,7 +164,7 @@ namespace gl {
 
 	class array_buffer : public buffer {
 	public:
-		array_buffer(unsigned name) : buffer(name){} 
+		array_buffer(unsigned name) : buffer(name) {} 
 		array_buffer() : buffer(buffer_target::array) {}
 		buffer_target target() override { return buffer_target::array; }
 	};
@@ -200,7 +185,7 @@ namespace gl {
 		typedef bool normalized;
 	}
 
-	class vertex_array : public bindable {
+	class vertex_array : public bindable, with_name {
 		friend void draw_arrays(primitive_type, unsigned, unsigned, std::shared_ptr<program>);
 		static unsigned gl_gen();
 		static void gl_get_attribiv(unsigned index, unsigned pname, int* params);
@@ -208,13 +193,16 @@ namespace gl {
 		static void gl_vertex_attrib_i_pointer(unsigned index, unsigned size, unsigned type, unsigned stride, void* pointer);
 		static void gl_bind(unsigned name);
 	public:
-		void bind() override { gl_bind(name); };
-		void del() override;
+		~vertex_array();
 
-		vertex_array():bindable(gl_gen()) {
+		vertex_array() : with_name{ gl_gen() } {
 			bind();
 		}
-		vertex_array(unsigned name) : bindable(name) {}
+		vertex_array(vertex_array&& v):with_name{ std::move(v) } {}
+
+		vertex_array(unsigned name):with_name{name} {}
+
+		void bind() override { gl_bind(name); };
 
 		std::shared_ptr<array_buffer> attrib_buffer(unsigned index) {
 			bind();
@@ -244,13 +232,6 @@ namespace gl {
 			return *pointer;
 		}
 
-		/*template<class T>
-		void attrib_pointer(unsigned index, int size, void* data, size_t bytes, bool normalized = false) {
-			array_buffer vbo;
-			vbo.data(bytes, data);
-			attrib_pointer<T, size>(index, vbo, normalized);
-		}*/
-
 		void enable_attrib_array(unsigned index);
 	};
 
@@ -262,7 +243,7 @@ namespace gl {
 		rgba = 0x1908
 	};
 
-	class texture : public bindable {
+	class texture : public bindable, with_name {
 		static unsigned gl_gen();
 		friend context;
 	protected:
@@ -272,16 +253,13 @@ namespace gl {
 		static void gl_bind(texture_target tar, unsigned name);
 
 		virtual texture_target target() = 0;
-		texture(texture_target tar):bindable(gl_gen()) {
+		texture(texture_target tar) :with_name{ gl_gen() } {
 			gl_bind(tar, name);
 		}
 
-		//texture_target target;
-		//texture() {
-		//}
 	public:
+		~texture();
 		void bind() override;
-		void del() override;
 	};       
 
 	class texture_2d : public texture {
@@ -299,24 +277,9 @@ namespace gl {
 		}
 
 		template<class Container>
-		void image(internal_format if_, unsigned w, unsigned h, pixel_format pf, Container data) {
+		void image(internal_format if_, unsigned w, unsigned h, pixel_format pf, Container& data) {
 			image(if_, w, h, pf, &*data.begin());
 		}
-
-		/*template<class T>
-		void sub_image(unsigned level, unsigned xoff, unsigned yoff, unsigned w, unsigned h, pixel_format pf, T* data) {
-			buffer::gl_bind(buffer::buffer_target::pixel_unpack, 0);
-			bind();
-			gl_tex_sub_image_2d(target, level, xoff, yoff, w, h, pf, gl_type_token<T>(), data);
-		}
-
-		template<class T>
-		void sub_image(buffer& buff, unsigned level, unsigned xoff, unsigned yoff, unsigned w, unsigned h, pixel_format pf) {
-			bind();
-			buff.bind();
-			gl_tex_sub_image_2d(target, level, xoff, yoff, w, h, pf, gl_type_token<T>, nullptr);
-		}*/
-
 
 		void storage(unsigned levels, internal_format if_, unsigned w, unsigned h);
 	};
@@ -326,15 +289,6 @@ namespace gl {
 		//texture_rect() :{texture_target::texture_2d} {}
 	};
 
-	/*enum sampler_parameter :GLenum {
-		texture_wrap_s
-	};*/
-	/*enum tex_coord:GLuint {
-		s = 1,
-		t = 1 << 1,
-		p = 1 << 2,
-		q = 1 << 3
-	};*/
 	enum wrap_mode :unsigned {
 		clamp_to_border = 0x812D,
 		clamp_to_edge = 0x812F,
@@ -345,8 +299,8 @@ namespace gl {
 		static unsigned gl_gen();
 
 	public:
-		sampler() :with_name(gl_gen()) {}
-		void del() override;
+		sampler() :with_name{ gl_gen() } {}
+		~sampler();
 		void texture_wrap_s(wrap_mode wm);
 		void texture_wrap_t(wrap_mode wm);
 		void texture_wrap_r(wrap_mode wm);
@@ -376,7 +330,7 @@ namespace gl {
 	public:
 		shader(shader&) = delete;
 		shader& operator=(shader&) = delete;
-		void del() override;
+		~shader();
 		//virtual shader_type type() = 0;
 		//shader(shader_type type, std::string src) :shader(type) { source(src); compile(); }
 
@@ -400,17 +354,14 @@ namespace gl {
 		static void gl_uniform_1iv(unsigned location, size_t count, const int* ptr);
 		static void gl_uniform_1uiv(unsigned location, size_t count, const unsigned* ptr);
 	public:
-		void del() override;
-		
-		program() : with_name(gl_create()) {}
+		~program();
+		program():with_name(gl_create()) {}
+		program(program&& p) :with_name{ std::move(p) } {}
 
 		program(vertex_shader&& vs, fragment_shader&& fs,
 			void(errorh)(shader_compilation_error error) = [](shader_compilation_error err) {}) : program()
 		{
 			try {
-				/*for (const shader* beg = init.begin(); beg != init.end(); beg++) {
-					attach(*beg);
-				}*/
 				attach(vs);
 				attach(fs);
 			}
@@ -446,12 +397,12 @@ namespace gl {
 		
 	};
 
-	class framebuffer : public bindable {
+	/*class framebuffer : public bindable {
 		static unsigned gl_gen();
 		framebuffer():bindable(gl_gen()){
 			bind();
 		}
-	};
+	};*/
 
 	enum primitive_type :unsigned {
 		lines = 1,
@@ -478,7 +429,7 @@ namespace gl {
 	}
 	template<class Container>
 	void draw_arrays(primitive_type pt, unsigned start, unsigned count, std::shared_ptr<program> prog,
-		std::shared_ptr<vertex_array> vao, Container container) {
+		std::shared_ptr<vertex_array> vao, Container& container) {
 
 		draw_arrays(pt, start, count, prog, vao, container.begin(), container.end());
 	}

@@ -27,6 +27,7 @@ protected:
 	std::shared_ptr<gl::vertex_array> vao_;
 	gl::primitive_type pt;
 	std::map<std::string, std::function<glm::mat4(void)>> matrix_providers;
+	std::vector<std::unique_ptr<gl::array_buffer>> buffers;
 
 	void update_matricies_uniforms() {
 		for (auto mat : matrix_providers) {
@@ -56,30 +57,32 @@ public:
 
 	template <class C>
 	void vertex_attrib_data(gl::vertex_attribute::location location, gl::vertex_attribute::size size,
-		gl::vertex_attribute::normalized normalized, C container) {
+		gl::vertex_attribute::normalized normalized, const C& container) {
 		vertex_attrib_data(location, size, normalized, container.begin(), container.end());
 	}
 
 	template <class C>
-	void vertex_attrib_i_data(gl::vertex_attribute::location location, gl::vertex_attribute::size size, C container) {
+	void vertex_attrib_i_data(gl::vertex_attribute::location location, gl::vertex_attribute::size size, const C& container) {
 		vertex_attrib_i_data(location, size, container.begin(), container.end());
 	}
 
 	template <class RAI>
 	void vertex_attrib_data(gl::vertex_attribute::location location, gl::vertex_attribute::size size,
 		gl::vertex_attribute::normalized normalized, RAI begin, RAI end) {
-		gl::array_buffer buff{};
-		buff.data(begin, end);
-		vao_->attrib_pointer<std::iterator_traits<RAI>::value_type>(location, size, buff, normalized);
+		auto buff = std::make_unique<gl::array_buffer>();
+		buff->data(begin, end);
+		vao_->attrib_pointer<std::iterator_traits<RAI>::value_type>(location, size, *buff, normalized);
 		vao_->enable_attrib_array(location);
+		buffers.push_back(std::move(buff));
 	}
 
 	template <class RAI>
 	void vertex_attrib_i_data(gl::vertex_attribute::location location, gl::vertex_attribute::size size, RAI begin, RAI end) {
-		gl::array_buffer buff{};
-		buff.data(begin, end);
-		vao_->attrib_i_pointer<std::iterator_traits<RAI>::value_type>(location, size, buff);
+		auto buff = std::make_unique<gl::array_buffer>();
+		buff->data(begin, end);
+		vao_->attrib_i_pointer<std::iterator_traits<RAI>::value_type>(location, size, *buff);
 		vao_->enable_attrib_array(location);
+		buffers.push_back(std::move(buff));
 	}
 
 	void render() override {

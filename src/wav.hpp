@@ -75,6 +75,11 @@ namespace wav {
 			stream.read((char*)(&data_format), chunk_size);
 		}
 
+		template<class Container>
+		void get(Container &c) {
+			get(c.data(), c.size());
+		}
+
 		void get(char* ptr, size_t size) override {
 			typedef std::char_traits<char> ch_traits;
 
@@ -83,7 +88,7 @@ namespace wav {
 					read_data_info();
 
 				stream.read(ptr, size);
-				int read = stream.gcount();
+				int read = (int)stream.gcount();
 				to_read -= read;
 				ptr += read;
 				size -= read;

@@ -4,6 +4,7 @@
 #include <fstream>
 #include <filesystem>
 #include "glm/ext/matrix_clip_space.hpp"
+#include "glm/ext/matrix_transform.hpp"
 
 using namespace std;
 using namespace gl;
@@ -16,7 +17,7 @@ int main() {
 	char* bytes = new char[size];
 	stream.read(bytes, size);
 	freetype::face face = freetype::load(bytes, bytes + size);
-	face.set_char_size(64 * 60, 64 * 60, 0, 0);
+	face.set_char_size(64 * 60, 0, 0, 0);
 
 	glfwInit();
 
@@ -31,7 +32,7 @@ int main() {
 		std::cout << message << "\n";
 	});
 
-	text_renderer tr{ "The quick brown fox", face, make_shared<program>(
+	text_renderer tr{ "The quick brown fox\njumps over the lazy dog", face, make_shared<program>(
 		vertex_shader{R"(
 #version 420 core
 
@@ -53,7 +54,7 @@ void main() {
 		fragment_shader{R"(
 #version 420 core
 
-uniform sampler2D u_textures[16];
+uniform sampler2D u_textures[32];
 
 in vec2 uv_vs;
 in flat int texture_unit_vs;
@@ -67,7 +68,7 @@ void main() {
 	};
 
 	tr.matrix("u_mat", []() {
-		return glm::ortho(-400.0, 400.0, -300.0, 300.0);
+		return glm::translate(glm::ortho(-400.0, 400.0, -300.0, 300.0), {-400.0, 200.0, 0});
 	});
 
 	while (!glfwWindowShouldClose(window))
