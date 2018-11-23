@@ -5,7 +5,7 @@
 #include <iostream>
 
 // !!! Dangerous part !!!
-#define ft_face (static_cast<FT_Face>(ft_face))
+#define ft_face (static_cast<FT_Face>(ft_face_))
 #define ft_size_metrics (static_cast<FT_Size_Metrics*>(ft_size_metrics_))
 #define ft_glyph (static_cast<FT_GlyphSlot>(ft_glyph_))
 #define ft_bitmap (*static_cast<FT_Bitmap*>(ft_bitmap))
@@ -30,7 +30,7 @@ face&& internal::load(void* begin, size_t size) {
 	unsigned error = FT_New_Memory_Face(lib, static_cast<FT_Byte*>(begin), size, 0, &f);
 	if(error)
 		cout << error << " error when reading font file";
-	return face{ std::move(f) };
+	return f;
 }
 
 /* Face */

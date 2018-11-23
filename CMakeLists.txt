@@ -17,14 +17,18 @@ file(GLOB_RECURSE OPENAL_HPP
 	./src/openal/*.hpp)
 file(GLOB_RECURSE OPENAL_CPP
 	./src/openal/*.cpp)
+file(GLOB_RECURSE GLFW_FILES
+	./src/glfw/*.hpp
+	./src/glfw/*.cpp)
 	
 add_library(cool STATIC 
-	${CORE_HPP} ${CORE_CPP} ${OPENGL_HPP} ${OPENGL_CPP} ${OPENAL_HPP} ${OPENAL_CPP})#gl.h gl.cpp main.cpp renderer.h renderable.h)
+	${CORE_HPP} ${CORE_CPP} ${OPENGL_HPP} ${OPENGL_CPP} ${OPENAL_HPP} ${OPENAL_CPP} ${GLFW_FILES})#gl.h gl.cpp main.cpp renderer.h renderable.h)
 set_property(TARGET cool PROPERTY CXX_STANDARD 17)
 
 source_group("Core Files" FILES ${CORE_HPP} ${CORE_CPP})
 source_group("OpenGL Files" FILES ${OPENGL_HPP} ${OPENGL_CPP})
 source_group("OpenAL Files" FILES ${OPENAL_HPP} ${OPENAL_CPP})
+source_group("GLFW Files" FILES ${GLFW_FILES})
 
 find_package(OpenGL REQUIRED)
 set(CMAKE_SYSTEM_FRAMEWORK_PATH ${CMAKE_SYSTEM_FRAMEWORK_PATH}, "C:/Program Files (x86)/OpenAL 1.1 SDK")
@@ -32,7 +36,7 @@ find_package(OpenAL REQUIRED)
 
 include_directories(libs/include/ src/ ${OPENGL_INCLUDE_DIR} ${OPENAL_INCLUDE_DIR})
 
-#target_link_libraries(cool ${LIB_DIR}/glfw3.lib)
+target_link_libraries(cool ${LIB_DIR}/glfw3.lib)
 target_link_libraries(cool ${LIB_DIR}/glew32s.lib)
 target_link_libraries(cool ${OPENGL_LIBRARIES})
 target_link_libraries(cool ${OPENAL_LIBRARY})
@@ -46,7 +50,7 @@ file(GLOB_RECURSE TEXT_RENDERER_FILES
 add_executable(text_renderer ${TEXT_RENDERER_FILES})
 set_property(TARGET text_renderer PROPERTY CXX_STANDARD 17)
 target_link_libraries(text_renderer cool)
-target_link_libraries(text_renderer ${LIB_DIR}/glfw3.lib)
+#target_link_libraries(text_renderer ${LIB_DIR}/glfw3.lib)
 include_directories(libs/include/ src/)
 
 source_group("Files" FILES ${TEXT_RENDERER_FILES})
@@ -71,7 +75,7 @@ file(GLOB_RECURSE GUI_FILES
 add_executable(gui ${GUI_FILES})
 set_property(TARGET gui PROPERTY CXX_STANDARD 17)
 target_link_libraries(gui cool)
-target_link_libraries(gui ${LIB_DIR}/glfw3.lib)
+#target_link_libraries(gui ${LIB_DIR}/glfw3.lib)
 include_directories(libs/include/ src/)
 
 source_group("Files" FILES ${GUI_FILES})

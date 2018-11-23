@@ -13,7 +13,12 @@ namespace freetype {
 
 	template<class RAI>
 	face&& load(RAI begin, RAI end) {
-		return internal::load(&*begin, std::distance(begin, end));
+		return face{ internal::load(&*begin, std::distance(begin, end)) };
+	}
+
+	template<class Container>
+	face&& load(Container& c) {
+		return face{ internal::load(&*c.begin(), std::distance(c.begin(), c.end())) };
 	}
 
 	typedef unsigned glyph_index;
@@ -71,11 +76,11 @@ namespace freetype {
 	class face {
 		friend glyph;
 		friend face&& internal::load(void*, size_t);
-		void* ft_face;
+		void* ft_face_;
 
 		DELETE_COPY(face)
 	protected:
-		face(void* face) : ft_face{ face } {}
+		face(void* face) : ft_face_{ face } {}
 	public:
 		class size_metrics {
 			friend face;
@@ -87,7 +92,13 @@ namespace freetype {
 			signed long height();
 		};
 
-		MOVE_A(face, f, ft_face{ f.ft_face }, { ft_face = f.ft_face; })
+		//MOVE_A(face, f, ft_face_{ f.ft_face_ }, { ft_face_ = f.ft_face_; })
+		face(face&& f) :ft_face_{
+			f.ft_face_
+		} {}
+		face&& operator=(face&& f) {
+			ft_face_ = f.ft_face_;
+		}
 
 		void set_char_size(unsigned w, unsigned h, unsigned hdr, unsigned wdr);
 		glyph_index get_char_index(unsigned charcode);

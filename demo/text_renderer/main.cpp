@@ -5,26 +5,30 @@
 #include <filesystem>
 #include "glm/ext/matrix_clip_space.hpp"
 #include "glm/ext/matrix_transform.hpp"
+#include "glfw/glfw.hpp"
 
 using namespace std;
 using namespace gl;
 using namespace filesystem;
+using namespace glfw;
 
 int main() {
 	path path("C:\\Windows\\Fonts\\comic.ttf");
 	ifstream stream(path, std::ios::binary);
-	size_t size = file_size(path);
-	char* bytes = new char[size];
-	stream.read(bytes, size);
-	freetype::face face = freetype::load(bytes, bytes + size);
+
+	vector<char> bytes(file_size(path));
+	stream.read(bytes.data(), bytes.size());
+	freetype::face face{ freetype::load(bytes) };
 	face.set_char_size(64 * 60, 0, 0, 0);
 
-	glfwInit();
+	//glfwInit();
+	glfw::window window{ glfw::create_window(800, 600, "Test", {window::opengl_debug_context(true)}) };
 
-	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
-	GLFWwindow* window = glfwCreateWindow(800, 600, "Hello", NULL, NULL);
+	//glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
+	//GLFWwindow* window = glfwCreateWindow(800, 600, "Hello", NULL, NULL);
 
-	glfwMakeContextCurrent(window);
+	//glfwMakeContextCurrent(window);
+	window.make_context_current();
 
 	gl::context* glc = wrap_context();
 	debug_message_callback([](message_source source, message_type type, unsigned id, message_severity severity, unsigned length,
@@ -71,15 +75,15 @@ void main() {
 		return glm::translate(glm::ortho(-400.0, 400.0, -300.0, 300.0), {-400.0, 200.0, 0});
 	});
 
-	while (!glfwWindowShouldClose(window))
+	while (!window.should_close())
 	{
 		clear_color(0, 0, 0, 1);
 		clear({ color_buffer });
 
 		tr.render();
 
-		glfwSwapBuffers(window);
-		glfwPollEvents();
+		window.swap_buffers();
+		poll_events();
 	}
 
 	glfwTerminate();

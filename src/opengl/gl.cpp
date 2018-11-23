@@ -213,6 +213,7 @@ namespace gl {
 	void debug_message_callback(
 		void(f)(message_source source, message_type type, unsigned id, message_severity severity, unsigned length,
 			const char* message, const void* userParam)) {
+
 		glDebugMessageCallback(reinterpret_cast<GLDEBUGPROC>(f), nullptr);
 	}
 

@@ -33,7 +33,7 @@ int main() {
 			int x, y = 0;
 		public:
 			button(int x, int y, float width, float height, std::shared_ptr<gl::program> program) :rend{ program, gl::primitive_type::triangles }, x{ x }, y{ y } {
-				rend.vertex_attrib_data(program->attrib_location("a_pos"), 2, false, std::vector<float>{
+				rend.vertex_attrib_data(program->attrib_location("a_pos"), 2, false, std::vector<float> {
 					0.0f, 0.0f,
 						width, 0.0f,
 						width, height,
