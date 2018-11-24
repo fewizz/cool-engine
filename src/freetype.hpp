@@ -1,24 +1,40 @@
 #pragma once
-#include <iterator>
-#include "useful_macros.hpp"
+#include <string>
+#include <istream>
+#include <vector>
 
 namespace freetype {
 	class face;
 	class glyph;
 
 	namespace internal {
+		#define FT_ERRORDEF_(e, v, s) e = v,
+		#define FT_NOERRORDEF_(e, v, s) e = v,
+		enum error {
+			#include "freetype/fterrdef.h"
+		};
+
+		#define FT_ERRORDEF_(e, v, s) if( code == v ) return s ;
+		#define FT_NOERRORDEF_(e, v, s) if( code == v ) return s ;
+		inline std::string get_error_name(unsigned code) {
+			#include "freetype/fterrdef.h"
+			throw std::runtime_error("undefined freetype error code");
+		}
+		#undef FT_ERRORDEF_
+		#undef FT_NOERRORDEF_
+
 		void init();
 		freetype::face&& load(void* begin, size_t size);
 	}
 
 	template<class RAI>
 	face&& load(RAI begin, RAI end) {
-		return face{ internal::load(&*begin, std::distance(begin, end)) };
+		return face{ internal::load(&*begin, end - begin) };
 	}
 
 	template<class Container>
 	face&& load(Container& c) {
-		return face{ internal::load(&*c.begin(), std::distance(c.begin(), c.end())) };
+		return face{ internal::load(&*c.begin(), c.end() - c.begin()) };
 	}
 
 	typedef unsigned glyph_index;
@@ -27,9 +43,8 @@ namespace freetype {
 		friend face;
 		void* ft_glyph_;
 
-		DELETE_COPY(glyph)
 	protected:
-		glyph(void* glyph);
+		glyph(void* glyph) :ft_glyph_{glyph} {}
 	public:
 		class bitmap {
 			void* ft_bitmap;
@@ -57,13 +72,9 @@ namespace freetype {
 			long vertical_bearing_y();
 			long vertical_advance();
 		};
-	private:
-		//glyph::bitmap bitmap_;
-		//glyph::metrics metrics_;
 	public:
-		//MOVE_A(glyph, g, ft_glyph{ g.ft_glyph }, { ft_glyph = g.ft_glyph; })
 		glyph(const glyph&& g)
-			:ft_glyph_{ g.ft_glyph_ } {}//, bitmap_{ g.bitmap_ }, metrics_{g.metrics_} {}
+			:ft_glyph_{ g.ft_glyph_ } {}
 
 		void render();
 		bitmap get_bitmap();
@@ -77,8 +88,6 @@ namespace freetype {
 		friend glyph;
 		friend face&& internal::load(void*, size_t);
 		void* ft_face_;
-
-		DELETE_COPY(face)
 	protected:
 		face(void* face) : ft_face_{ face } {}
 	public:
@@ -92,7 +101,6 @@ namespace freetype {
 			signed long height();
 		};
 
-		//MOVE_A(face, f, ft_face_{ f.ft_face_ }, { ft_face_ = f.ft_face_; })
 		face(face&& f) :ft_face_{
 			f.ft_face_
 		} {}
@@ -107,4 +115,6 @@ namespace freetype {
 		short height();
 		unsigned short units_per_EM();
 	};
+
+	extern face&& load_from_stream(std::istream& stream);
 }

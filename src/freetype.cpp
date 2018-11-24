@@ -17,27 +17,28 @@ using namespace std;
 FT_Library lib;
 
 /* Internal */
-void internal::init() {
-	FT_Error error = FT_Init_FreeType(&lib);
-	if (error) {
-		cout << "freetype init error";
-		throw std::exception("freetype init error");
+
+void check_for_errors(FT_Error error) {
+	if (error != internal::Ok) {
+		std::string error_name = internal::get_error_name(error);
+		throw std::runtime_error("freetype error: " + error_name);
 	}
 }
+
+void internal::init() {
+	check_for_errors(FT_Init_FreeType(&lib));
+}
+
 face&& internal::load(void* begin, size_t size) {
 	internal::init();
 	FT_Face f;
-	unsigned error = FT_New_Memory_Face(lib, static_cast<FT_Byte*>(begin), size, 0, &f);
-	if(error)
-		cout << error << " error when reading font file";
+	check_for_errors(FT_New_Memory_Face(lib, static_cast<FT_Byte*>(begin), size, 0, &f));
 	return f;
 }
 
 /* Face */
 void face::set_char_size(unsigned w, unsigned h, unsigned wdr, unsigned hdr) {
-	unsigned error = FT_Set_Char_Size(ft_face, w, h, wdr, hdr);
-	if (error)
-		cout << error << " set_char_size error";
+	check_for_errors(FT_Set_Char_Size(ft_face, w, h, wdr, hdr));
 }
 
 glyph_index face::get_char_index(unsigned charcode) {
@@ -45,11 +46,7 @@ glyph_index face::get_char_index(unsigned charcode) {
 }
 
 glyph&& face::load_glyph(glyph_index index) {
-	//cout << ft_face->family_name << " " << ft_face->num_faces << " " << ft_face->style_name << " " << ft_face->num_glyphs;
-	unsigned error = FT_Load_Glyph(ft_face, index, FT_LOAD_RENDER);
-	if (error) {
-		cout << error << " load_glyph error";
-	}
+	check_for_errors(FT_Load_Glyph(ft_face, index, FT_LOAD_RENDER));
 	return glyph{ ft_face->glyph };
 }
 
@@ -77,9 +74,6 @@ signed long face::size_metrics::height() {
 }
 
 /* Glyph */
-glyph::glyph(void* glyph)
-	:/*bitmap_{ &(static_cast<FT_GlyphSlot>(glyph)->bitmap) },*/ ft_glyph_{ glyph }/*, metrics_{ &(static_cast<FT_GlyphSlot>(glyph)->metrics) }*/ {}
-
 void freetype::glyph::render() {
 	FT_Render_Glyph(ft_glyph, FT_RENDER_MODE_NORMAL);
 }
@@ -127,3 +121,15 @@ long glyph::metrics::horizontal_advance() { return ft_metrics.horiAdvance; }
 long glyph::metrics::vertical_bearing_x() { return ft_metrics.vertBearingX; }
 long glyph::metrics::vertical_bearing_y() { return ft_metrics.vertBearingY; }
 long glyph::metrics::vertical_advance() { return ft_metrics.vertAdvance; }
+
+namespace freetype {
+	face&& load_from_stream(std::istream& stream) {
+		std::streampos prev = stream.tellg();
+		stream.seekg(0, std::ios_base::end);
+		std::streampos size = stream.tellg();
+		stream.seekg(prev);
+		char* bytes = new char[size]; // API Reference -> User Allocarion
+		stream.read(bytes, size);
+		return face{ load(bytes, bytes + size) };
+	}
+}

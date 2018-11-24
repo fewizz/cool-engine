@@ -1,4 +1,4 @@
-#define GLFW_INCLUDE_NONE
+﻿#define GLFW_INCLUDE_NONE
 #include "GLFW/glfw3.h"
 #include "text_renderer.hpp"
 #include <fstream>
@@ -15,19 +15,13 @@ using namespace glfw;
 int main() {
 	path path("C:\\Windows\\Fonts\\comic.ttf");
 	ifstream stream(path, std::ios::binary);
-
-	vector<char> bytes(file_size(path));
-	stream.read(bytes.data(), bytes.size());
-	freetype::face face{ freetype::load(bytes) };
+	//vector<char> bytes(file_size(path));
+	//stream.read(bytes.data(), bytes.size());;
+	freetype::face face{ freetype::load_from_stream(stream) };
 	face.set_char_size(64 * 60, 0, 0, 0);
 
-	//glfwInit();
 	glfw::window window{ glfw::create_window(800, 600, "Test", {window::opengl_debug_context(true)}) };
 
-	//glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
-	//GLFWwindow* window = glfwCreateWindow(800, 600, "Hello", NULL, NULL);
-
-	//glfwMakeContextCurrent(window);
 	window.make_context_current();
 
 	gl::context* glc = wrap_context();
@@ -36,7 +30,7 @@ int main() {
 		std::cout << message << "\n";
 	});
 
-	text_renderer tr{ "The quick brown fox\njumps over the lazy dog", face, make_shared<program>(
+	text_renderer tr{ u8"The quick brown fox\njumps over the lazy dog", face, make_shared<program>(
 		vertex_shader{R"(
 #version 420 core
 
@@ -75,9 +69,9 @@ void main() {
 		return glm::translate(glm::ortho(-400.0, 400.0, -300.0, 300.0), {-400.0, 200.0, 0});
 	});
 
+	clear_color(0, 0, 0, 1);
 	while (!window.should_close())
 	{
-		clear_color(0, 0, 0, 1);
 		clear({ color_buffer });
 
 		tr.render();
