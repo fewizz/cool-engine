@@ -81,7 +81,7 @@ namespace gl {
 	public:
 	};
 
-	context* wrap_context();
+	context&& wrap_context();
 	
 
 	// §4.1

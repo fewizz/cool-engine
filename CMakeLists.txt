@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.6)
 
-project(CoolEngine)
+project(UtilityHeap)
 
 set(LIB_DIR ${CMAKE_SOURCE_DIR}/libs)
 
@@ -20,26 +20,28 @@ file(GLOB_RECURSE OPENAL_CPP
 file(GLOB_RECURSE GLFW_FILES
 	./src/glfw/*.hpp
 	./src/glfw/*.cpp)
+file(GLOB_RECURSE FREETYPE_FILES
+	./src/freetype/*.hpp
+	./src/freetype/*.cpp)
 	
 add_library(cool STATIC 
 	${CORE_HPP} ${CORE_CPP} ${OPENGL_HPP} ${OPENGL_CPP} ${OPENAL_HPP} ${OPENAL_CPP} ${GLFW_FILES})#gl.h gl.cpp main.cpp renderer.h renderable.h)
 set_property(TARGET cool PROPERTY CXX_STANDARD 17)
 
-source_group("Core Files" FILES ${CORE_HPP} ${CORE_CPP})
-source_group("OpenGL Files" FILES ${OPENGL_HPP} ${OPENGL_CPP})
-source_group("OpenAL Files" FILES ${OPENAL_HPP} ${OPENAL_CPP})
-source_group("GLFW Files" FILES ${GLFW_FILES})
+source_group("Core" FILES ${CORE_HPP} ${CORE_CPP})
+source_group("OpenGL" FILES ${OPENGL_HPP} ${OPENGL_CPP})
+source_group("OpenAL" FILES ${OPENAL_HPP} ${OPENAL_CPP})
+source_group("GLFW" FILES ${GLFW_FILES})
+source_group("Freetype" FILES ${FREETYPE_FILES})
 
 find_package(OpenGL REQUIRED)
-set(CMAKE_SYSTEM_FRAMEWORK_PATH ${CMAKE_SYSTEM_FRAMEWORK_PATH}, "C:/Program Files (x86)/OpenAL 1.1 SDK")
-find_package(OpenAL REQUIRED)
 
 include_directories(libs/include/ src/ ${OPENGL_INCLUDE_DIR} ${OPENAL_INCLUDE_DIR})
 
 target_link_libraries(cool ${LIB_DIR}/glfw3.lib)
 target_link_libraries(cool ${LIB_DIR}/glew32s.lib)
 target_link_libraries(cool ${OPENGL_LIBRARIES})
-target_link_libraries(cool ${OPENAL_LIBRARY})
+target_link_libraries(cool ${LIB_DIR}/OpenAL32.lib)
 target_link_libraries(cool ${LIB_DIR}/freetype.lib)
 		
 # text renderer

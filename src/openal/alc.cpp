@@ -1,7 +1,7 @@
 #include "alc.hpp"
 #include "alc.h"
 
-alc::device&& alc::open_device(std::string device_name) {
+alc::device alc::open_device(std::string device_name) {
 	ALCdevice* device = alcOpenDevice(device_name.length() == 0 ? nullptr : device_name.c_str());
 	if (device == nullptr) {
 		throw std::exception("Error when opening AL device");
@@ -9,7 +9,7 @@ alc::device&& alc::open_device(std::string device_name) {
 	return device;
 }
 
-alc::context&& alc::device::create_context() {
+alc::context alc::device::create_context() {
 	return alcCreateContext(static_cast<ALCdevice*>(device_ptr), nullptr);
 }
 

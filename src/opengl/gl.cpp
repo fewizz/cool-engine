@@ -7,9 +7,9 @@
 
 namespace gl {
 
-	context* wrap_context() {
+	context&& wrap_context() {
 		glewInit();
-		return new context{};
+		return context{};
 	}
 
 	/* With name */
