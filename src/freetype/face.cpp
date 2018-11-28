@@ -29,6 +29,11 @@ void freetype::face::set_char_size(int w, int h, int hr, int vr) {
 	FT_Set_Char_Size((FT_Face)face_rec_ptr, w, h, hr, vr);
 }
 
+freetype::bbox freetype::face::get_bbox() {
+	FT_BBox b = ((FT_Face)face_rec_ptr)->bbox;
+	return bbox(b.xMin, b.yMin, b.xMax, b.yMax);
+}
+
 freetype::glyph_index freetype::face::get_char_index(unsigned charcode) {
 	return FT_Get_Char_Index(((FT_Face)face_rec_ptr), charcode);
 }

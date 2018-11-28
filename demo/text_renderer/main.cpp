@@ -35,28 +35,25 @@ uniform mat4 u_mat;
 
 in vec2 a_position;
 in vec2 a_uv;
-in int a_texture_unit;
 
 out vec2 uv_vs;
-out flat int texture_unit_vs;
 
 void main() {
 	uv_vs = a_uv;
-	texture_unit_vs = a_texture_unit;
 	gl_Position = u_mat * vec4(a_position, 0, 1);
 }
 )"},
 		fragment_shader{R"(
 #version 420 core
 
-uniform sampler2D u_textures[32];
+uniform sampler2D u_atlas;
 
 in vec2 uv_vs;
 in flat int texture_unit_vs;
 out vec4 color;
 
 void main() {
-	color = texture(u_textures[texture_unit_vs], uv_vs);
+	color = texture(u_atlas, uv_vs);
 }
 )"}
 		)

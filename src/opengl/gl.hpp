@@ -23,7 +23,7 @@ namespace gl {
 
 	namespace internal {
 		template<class T>
-		static unsigned constexpr gl_type_token() {
+		static unsigned constexpr type_token() {
 			if (std::is_same_v<T, int8_t>)
 				return 0x1400;
 			if (std::is_same_v<T, uint8_t>)
@@ -81,7 +81,7 @@ namespace gl {
 	public:
 	};
 
-	context&& wrap_context();
+	context wrap_context();
 	
 
 	// §4.1
@@ -128,18 +128,18 @@ namespace gl {
 			pixel_unpack = 0x88EC
 		};
 
-		static unsigned gl_gen();
-		static void gl_bind(unsigned target, unsigned name);
-		static void gl_parameteriv(unsigned tar, unsigned value, int* data);
+		static unsigned gen();
+		static void bind(unsigned target, unsigned name);
+		static void parameteriv(unsigned tar, unsigned value, int* data);
 
-		buffer(buffer_target tar) : with_name{ gl_gen() } {
-			gl_bind(tar, name);
+		buffer(buffer_target tar) : with_name{ gen() } {
+			bind(tar, name);
 		}
 		buffer(unsigned name) : with_name{ name } {}
 
 		virtual buffer_target target() = 0;
 
-		void bind() override { gl_bind(target(), name); }
+		void bind() override { bind(target(), name); }
 
 		void data(size_t bytes, const void * data, buffer_usage usage = buffer_usage::static_draw);
 	public:
@@ -152,7 +152,7 @@ namespace gl {
 		size_t size() {
 			bind();
 			int size;
-			gl_parameteriv(target(), 0x8764, &size);
+			parameteriv(target(), 0x8764, &size);
 			return size;
 		}
 
@@ -177,7 +177,7 @@ namespace gl {
 	};
 
 	enum primitive_type :unsigned;
-	void draw_arrays(primitive_type pt, unsigned start, unsigned count, std::shared_ptr<program> prog);
+	void draw_arrays(primitive_type pt, unsigned start, size_t count, std::shared_ptr<program> prog);
 
 	namespace vertex_attribute {
 		typedef unsigned int size;
@@ -186,28 +186,28 @@ namespace gl {
 	}
 
 	class vertex_array : public bindable, with_name {
-		friend void draw_arrays(primitive_type, unsigned, unsigned, std::shared_ptr<program>);
-		static unsigned gl_gen();
-		static void gl_get_attribiv(unsigned index, unsigned pname, int* params);
-		static void gl_vertex_attrib_pointer(unsigned index, unsigned size, unsigned type, bool normalized, unsigned stride, void* pointer);
-		static void gl_vertex_attrib_i_pointer(unsigned index, unsigned size, unsigned type, unsigned stride, void* pointer);
-		static void gl_bind(unsigned name);
+		friend void draw_arrays(primitive_type, unsigned, size_t, std::shared_ptr<program>);
+		static unsigned gen();
+		static void get_attribiv(unsigned index, unsigned pname, int* params);
+		static void vertex_attrib_pointer(unsigned index, unsigned size, unsigned type, bool normalized, unsigned stride, void* pointer);
+		static void vertex_attrib_i_pointer(unsigned index, unsigned size, unsigned type, unsigned stride, void* pointer);
+		static void bind(unsigned name);
 	public:
 		~vertex_array();
 
-		vertex_array() : with_name{ gl_gen() } {
+		vertex_array() : with_name{ gen() } {
 			bind();
 		}
 		vertex_array(vertex_array&& v):with_name{ std::move(v) } {}
 
 		vertex_array(unsigned name):with_name{name} {}
 
-		void bind() override { gl_bind(name); };
+		void bind() override { bind(name); };
 
 		std::shared_ptr<array_buffer> attrib_buffer(unsigned index) {
 			bind();
 			unsigned pointer[1];
-			gl_get_attribiv(index, 0x889F, (int*)pointer);
+			get_attribiv(index, 0x889F, (int*)pointer);
 			return view<array_buffer>(*pointer);
 		}
 
@@ -215,20 +215,20 @@ namespace gl {
 		void attrib_pointer(vertex_attribute::location location, vertex_attribute::size size, buffer& buff, vertex_attribute::normalized normalized = false) {
 			bind();
 			buff.bind();
-			gl_vertex_attrib_pointer(location, size, internal::gl_type_token<T>(), normalized, 0, nullptr);
+			vertex_attrib_pointer(location, size, internal::type_token<T>(), normalized, 0, nullptr);
 		}
 
 		template<class T>
 		void attrib_i_pointer(vertex_attribute::location location, vertex_attribute::size size, buffer& buff) {
 			bind();
 			buff.bind();
-			gl_vertex_attrib_i_pointer(location, size, internal::gl_type_token<T>(), 0, nullptr);
+			vertex_attrib_i_pointer(location, size, internal::type_token<T>(), 0, nullptr);
 		}
 
 		unsigned attrib_size(unsigned index){
 			bind();
 			unsigned pointer[1];
-			gl_get_attribiv(index, 0x8623, (int*)pointer);
+			get_attribiv(index, 0x8623, (int*)pointer);
 			return *pointer;
 		}
 
@@ -244,41 +244,58 @@ namespace gl {
 	};
 
 	class texture : public bindable, with_name {
-		static unsigned gl_gen();
+		static unsigned gen_();
 		friend context;
 	protected:
 		enum texture_target :unsigned {
 			texture_2d = 0x0DE1
 		};
-		static void gl_bind(texture_target tar, unsigned name);
+		static void bind(texture_target tar, unsigned name);
 
 		virtual texture_target target() = 0;
-		texture(texture_target tar) :with_name{ gl_gen() } {
-			gl_bind(tar, name);
+		texture(texture_target tar) :with_name{ gen_() } {
+			bind(tar, name);
 		}
 
+		int get_level_parameter_i_(unsigned pname, int level = 0);
 	public:
 		~texture();
 		void bind() override;
+
+		unsigned width() {
+			bind();
+			return get_level_parameter_i_(0x1000);
+		}
 	};       
 
 	class texture_2d : public texture {
-		static void gl_tex_sub_image_2d(unsigned target, unsigned level, unsigned xo, unsigned yo, unsigned w, unsigned h, unsigned format, unsigned type, void* p);
-		static void gl_tex_image_2d(unsigned target, unsigned if_, unsigned w, unsigned h, unsigned pf, unsigned type, void* data);
+		static void sub_image_2d(unsigned target, unsigned level, unsigned xo, unsigned yo, unsigned w, unsigned h, unsigned format, unsigned type, void* p);
+		static void image_2d(unsigned target, unsigned if_, unsigned w, unsigned h, unsigned pf, unsigned type, void* data);
 	protected:
 		texture_target target() override { return texture_target::texture_2d; }
 	public:
 		texture_2d():texture{ texture_target::texture_2d } {}
 
+		unsigned height() {
+			bind();
+			return get_level_parameter_i_(0x1001);
+		}
+
 		template<class T>
 		void image(internal_format if_, unsigned w, unsigned h, pixel_format pf, T* data) {
 			bind();
-			gl_tex_image_2d(target(), if_, w, h, pf, internal::gl_type_token<T>(), data);
+			image_2d(target(), if_, w, h, pf, internal::type_token<T>(), data);
 		}
 
 		template<class Container>
 		void image(internal_format if_, unsigned w, unsigned h, pixel_format pf, Container& data) {
 			image(if_, w, h, pf, &*data.begin());
+		}
+
+		template<class T>
+		void sub_image(int xo, int yo, int w, int h, pixel_format pf, T* data) {
+			bind();
+			sub_image_2d(target(), 0, xo, yo, w, h, pf, internal::type_token<T>(), data);
 		}
 
 		void storage(unsigned levels, internal_format if_, unsigned w, unsigned h);
@@ -324,8 +341,8 @@ namespace gl {
 		};
 		shader_type type;
 
-		static unsigned gl_create(shader_type type);
-		shader(shader_type type):with_name(gl_create(type)), type {type} {}
+		static unsigned create(shader_type type);
+		shader(shader_type type):with_name(create(type)), type {type} {}
 		shader(shader_type type, std::string src):shader(type) { source(src); compile(); }
 	public:
 		shader(shader&) = delete;
@@ -350,12 +367,12 @@ namespace gl {
 
 	class program :public with_name {
 	protected:
-		static unsigned gl_create();
-		static void gl_uniform_1iv(unsigned location, size_t count, const int* ptr);
-		static void gl_uniform_1uiv(unsigned location, size_t count, const unsigned* ptr);
+		static unsigned create();
+		static void uniform_1iv(unsigned location, size_t count, const int* ptr);
+		static void uniform_1uiv(unsigned location, size_t count, const unsigned* ptr);
 	public:
 		~program();
-		program():with_name(gl_create()) {}
+		program():with_name(create()) {}
 		program(program&& p) :with_name{ std::move(p) } {}
 
 		program(vertex_shader&& vs, fragment_shader&& fs,
@@ -379,7 +396,7 @@ namespace gl {
 		template<class RAI>
 		void uniform_1uiv(unsigned location, RAI begin, RAI end) {
 			use();
-			gl_uniform_1uiv(location, std::distance(begin, end), &*(begin));
+			uniform_1uiv(location, std::distance(begin, end), &*(begin));
 		}
 		template<class Container>
 		void uniform_1uiv(unsigned location, Container container) {
@@ -388,7 +405,7 @@ namespace gl {
 		template<class RAI>
 		void uniform_1iv(unsigned location, RAI begin, RAI end) {
 			use();
-			gl_uniform_1iv(location, std::distance(begin, end), &*(begin));
+			uniform_1iv(location, std::distance(begin, end), &*(begin));
 		}
 		template<class Container>
 		void uniform_1iv(unsigned location, Container container) {
@@ -414,13 +431,13 @@ namespace gl {
 	};
 	void active_texture(texture& tex, unsigned index);
 
-	void draw_arrays(primitive_type pt, unsigned start, unsigned count, std::shared_ptr<program> prog);
-	void draw_arrays(primitive_type pt, unsigned start, unsigned count, std::shared_ptr<program> prog,
+	void draw_arrays(primitive_type pt, unsigned start, size_t count, std::shared_ptr<program> prog);
+	void draw_arrays(primitive_type pt, unsigned start, size_t count, std::shared_ptr<program> prog,
 		std::shared_ptr<vertex_array> vao);
-	void draw_arrays(primitive_type pt, unsigned start, unsigned count, std::shared_ptr<program> prog,
+	void draw_arrays(primitive_type pt, unsigned start, size_t count, std::shared_ptr<program> prog,
 		std::shared_ptr<vertex_array> vao, std::map<const unsigned, texture*> texture_units);
 	template<class Iterator>
-	void draw_arrays(primitive_type pt, unsigned start, unsigned count, std::shared_ptr<program> prog,
+	void draw_arrays(primitive_type pt, unsigned start, size_t count, std::shared_ptr<program> prog,
 		std::shared_ptr<vertex_array> vao, Iterator begin, Iterator end) {
 
 		for (unsigned i = 0; begin != end; i++, begin++) 
@@ -428,7 +445,7 @@ namespace gl {
 		draw_arrays(pt, start, count, prog, vao);
 	}
 	template<class Container>
-	void draw_arrays(primitive_type pt, unsigned start, unsigned count, std::shared_ptr<program> prog,
+	void draw_arrays(primitive_type pt, unsigned start, size_t count, std::shared_ptr<program> prog,
 		std::shared_ptr<vertex_array> vao, Container& container) {
 
 		draw_arrays(pt, start, count, prog, vao, container.begin(), container.end());

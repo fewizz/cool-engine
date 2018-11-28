@@ -7,7 +7,7 @@
 
 namespace gl {
 
-	context&& wrap_context() {
+	context wrap_context() {
 		glewInit();
 		return context{};
 	}
@@ -26,8 +26,8 @@ namespace gl {
 	unsigned query::gl_gen() { return 0; };
 
 	/* Buffer */
-	unsigned buffer::gl_gen() { unsigned n; glGenBuffers(1, &n); return n; }
-	void buffer::gl_bind(unsigned t, unsigned n) {
+	unsigned buffer::gen() { unsigned n; glGenBuffers(1, &n); return n; }
+	void buffer::bind(unsigned t, unsigned n) {
 		glBindBuffer(t, n);
 	}
 	buffer::~buffer() {
@@ -37,7 +37,7 @@ namespace gl {
 #endif
 	}
 
-	void buffer::gl_parameteriv(unsigned tar, unsigned value, int* data) {
+	void buffer::parameteriv(unsigned tar, unsigned value, int* data) {
 		glGetBufferParameteriv(tar, value, data);
 	}
 
@@ -47,13 +47,13 @@ namespace gl {
 	}
 
 	/* Vertex array */
-	unsigned vertex_array::gl_gen() {
+	unsigned vertex_array::gen() {
 		unsigned name;
 		glGenVertexArrays(1, &name);
 		return name;
 	}
-	void vertex_array::gl_bind(unsigned name) { glBindVertexArray(name); }
-	void vertex_array::gl_get_attribiv(unsigned index, unsigned pname, int* params) {
+	void vertex_array::bind(unsigned name) { glBindVertexArray(name); }
+	void vertex_array::get_attribiv(unsigned index, unsigned pname, int* params) {
 		glGetVertexAttribiv(index, pname, params);
 	}
 	vertex_array::~vertex_array() {
@@ -63,11 +63,11 @@ namespace gl {
 #endif
 	}
 
-	void vertex_array::gl_vertex_attrib_pointer(unsigned index, unsigned size, unsigned type, bool normalized, unsigned stride, void* pointer) {
+	void vertex_array::vertex_attrib_pointer(unsigned index, unsigned size, unsigned type, bool normalized, unsigned stride, void* pointer) {
 		glVertexAttribPointer(index, size, type, normalized, stride, nullptr);
 	}
 
-	void vertex_array::gl_vertex_attrib_i_pointer(unsigned index, unsigned size, unsigned type, unsigned stride, void* pointer) {
+	void vertex_array::vertex_attrib_i_pointer(unsigned index, unsigned size, unsigned type, unsigned stride, void* pointer) {
 		glVertexAttribIPointer(index, size, type, stride, nullptr);
 	}
 
@@ -77,28 +77,33 @@ namespace gl {
 	}
 
 	/* Texture */
-	unsigned texture::gl_gen() {
+	unsigned texture::gen_() {
 		unsigned name;
 		glGenTextures(1, &name);
 		return name;
 	}
-	void texture::gl_bind(texture_target tar, unsigned name) {
+	void texture::bind(texture_target tar, unsigned name) {
 		glBindTexture(tar, name);
 	}
-	void texture::bind() { gl_bind(target(), name); }
+	void texture::bind() { bind(target(), name); }
 	texture::~texture() {
 		glDeleteTextures(1, &name); invalidate_name();
 #if LOG_DESTRUCT
 		std::cout << "texture destruct\n";
 #endif
 	}
+	int texture::get_level_parameter_i_(unsigned pname, int level) {
+		int param;
+		glGetTexLevelParameteriv(target(), level, pname, &param);
+		return param;
+	}
 
 	/* Texture2D */
-	void texture_2d::gl_tex_sub_image_2d(unsigned target, unsigned level, unsigned xo, unsigned yo, unsigned w, unsigned h, unsigned format, unsigned type, void* p) {
+	void texture_2d::sub_image_2d(unsigned target, unsigned level, unsigned xo, unsigned yo, unsigned w, unsigned h, unsigned format, unsigned type, void* p) {
 		glTexSubImage2D(target, level, xo, yo, w, h, format, type, p);
 	}
 
-	void texture_2d::gl_tex_image_2d(unsigned target, unsigned if_, unsigned w, unsigned h, unsigned pf, unsigned type, void* data) {
+	void texture_2d::image_2d(unsigned target, unsigned if_, unsigned w, unsigned h, unsigned pf, unsigned type, void* data) {
 		glTexImage2D(target, 0, if_, w, h, 0, pf, type, data);
 		glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -124,7 +129,7 @@ namespace gl {
 	void sampler::texture_wrap_r(wrap_mode wm) { glSamplerParameteri(name, GL_TEXTURE_WRAP_R, wm); }
 
 	/* Shader */
-	unsigned shader::gl_create(shader::shader_type type) { return glCreateShader(type); }
+	unsigned shader::create(shader::shader_type type) { return glCreateShader(type); }
 	shader::~shader() {
 		glDeleteShader(name); invalidate_name();
 #if LOG_DESTRUCT
@@ -151,7 +156,7 @@ namespace gl {
 	}
 
 	/* Program */
-	unsigned program::gl_create() { return glCreateProgram(); }
+	unsigned program::create() { return glCreateProgram(); }
 	program::~program() {
 		glDeleteProgram(name); invalidate_name();
 #if LOG_DESTRUCT
@@ -179,23 +184,23 @@ namespace gl {
 
 	void program::uniform_1ui(unsigned location, unsigned value) { use(); glUniform1ui(location, value); }
 	void program::uniform_1i(unsigned location, int value) { use(); glUniform1i(location, value); }
-	void program::gl_uniform_1iv(unsigned location, size_t count, const int* ptr) { glUniform1iv(location, count, ptr); }
-	void program::gl_uniform_1uiv(unsigned location, size_t count, const unsigned* ptr) { glUniform1uiv(location, count, ptr); }
+	void program::uniform_1iv(unsigned location, size_t count, const int* ptr) { glUniform1iv(location, (GLsizei)count, ptr); }
+	void program::uniform_1uiv(unsigned location, size_t count, const unsigned* ptr) { glUniform1uiv(location, (GLsizei)count, ptr); }
 	//void program::uniform_1uiv(unsigned location, unsigned* begin, unsigned* end) { use(); glUniform1uiv(location, std::distance(begin, end), begin); }
 	//void program::uniform_1iv(unsigned location, int* begin, int* end) { use(); glUniform1iv(location, std::distance(begin, end), begin); }
 
 	//
-	void draw_arrays(primitive_type pt, unsigned start, unsigned count, std::shared_ptr<program> prog) {
+	void draw_arrays(primitive_type pt, unsigned start, size_t count, std::shared_ptr<program> prog) {
 		prog->use();
-		glDrawArrays(pt, start, count);
+		glDrawArrays(pt, start, (GLsizei)count);
 	}
-	void draw_arrays(primitive_type pt, unsigned start, unsigned count, std::shared_ptr<program> prog,
+	void draw_arrays(primitive_type pt, unsigned start, size_t count, std::shared_ptr<program> prog,
 		std::shared_ptr<vertex_array> vao) {
 
 		vao->bind();
 		draw_arrays(pt, start, count, prog);
 	}
-	void draw_arrays(primitive_type pt, unsigned start, unsigned count, std::shared_ptr<program> prog,
+	void draw_arrays(primitive_type pt, unsigned start, size_t count, std::shared_ptr<program> prog,
 		std::shared_ptr<vertex_array> vao, std::map<const unsigned, texture*> texture_units) {
 
 		for (std::pair<unsigned, texture*> p : texture_units) {

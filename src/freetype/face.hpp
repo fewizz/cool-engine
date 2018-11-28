@@ -7,6 +7,7 @@
 #pragma once
 #include "library.hpp"
 #include "glyph.hpp"
+#include "bbox.hpp"
 
 namespace freetype {
 	typedef unsigned glyph_index;
@@ -30,6 +31,8 @@ namespace freetype {
 		glyph_index get_char_index(unsigned charcode);
 
 		void set_char_size(int w, int h, int hr, int vr);
+
+		bbox get_bbox();
 
 		void load_glyph(glyph_index index);
 
