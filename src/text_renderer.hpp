@@ -26,13 +26,10 @@ namespace gfx {
 			side_size++;
 			tex_atlas = new gfx::fixed_texture_atlas(side_size, 30);
 
-			//std::vector<uint32_t> chars_used;
 			std::vector<float> positions;
-			//std::vector<unsigned> tex_units;
-			std::map<uint32_t, std::pair<unsigned, unsigned>> char_uv;
-			//std::map<uint32_t, gl::texture_2d*> char_tex;
-			//std::map<gl::texture_2d*, unsigned> tex_unit_index;
 			std::vector<float> uvs;
+
+			std::map<uint32_t, std::pair<unsigned, unsigned>> char_uv;
 			long penX = 0;
 			long penY = 0;
 			unsigned last_index = 0;
@@ -87,15 +84,9 @@ namespace gfx {
 						w = h = 1;
 					}
 
-					//glyph_tex->image(gl::internal_format::rgba8, w, h, gl::pixel_format::rgba, data);
 					std::pair<unsigned, unsigned> right_bot = tex_atlas->add(w, h, data.data());
 					char_uv[code_point] = right_bot;
-					//char_tex[code_point] = glyph_tex;
-					//tex_unit_index[glyph_tex] = last_index++;
-					//glyph_textures.push_back(glyph_tex);
 				}
-				//unsigned unit = tex_unit_index[char_tex[code_point]];
-				//tex_units.insert(tex_units.end(), 6, unit);
 
 				std::pair<unsigned, unsigned> p = char_uv[code_point];
 				float x = p.first / (float)tex_atlas->width();

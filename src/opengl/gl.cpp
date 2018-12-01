@@ -92,7 +92,8 @@ namespace gl {
 		std::cout << "texture destruct\n";
 #endif
 	}
-	int texture::get_level_parameter_i_(unsigned pname, int level) {
+	int texture::get_level_parameter_i(unsigned pname, int level) {
+		bind();
 		int param;
 		glGetTexLevelParameteriv(target(), level, pname, &param);
 		return param;

@@ -2,10 +2,11 @@
 #include <iostream>
 #include <string>
 #include <memory>
+#include <vector>
 #include <audio.hpp>
+#include "unsafe_iostream_operations.hpp"
 
 namespace wav {
-
 	enum class format_tag : uint16_t {
 		pcm = 0x0001,
 		ieee_float = 0x0003,
@@ -14,96 +15,48 @@ namespace wav {
 		extensible = 0xfffe
 	};
 
-	template<class IStream>
-	class wave_sample_provider : public audio::sample_provider {
-		IStream& stream;
-		uint32_t wave_chunks_bytes;
-		int16_t to_read = -1;
-		bool odd = false;
+	class decoder {
+		std::istream& istream;
 
-		struct {
+		struct data_format {
 			format_tag tag;
 			uint16_t channels;
 			uint32_t sample_rate;
 			uint32_t data_rate;
 			uint16_t data_block_size;
 			uint16_t bits_per_sample;
-		} data_format;
+		};
+		data_format fmt;
 
-		void* sub_data;
-		void read_data_info() {
-			typedef std::char_traits<char> ch_traits;
-			char temp_4[4];
-
-			stream.read(temp_4, 4);
-			if (ch_traits::compare(temp_4, "data", 4) != 0)
-				throw std::exception("invalid data");
-
-			stream.read((char*)&to_read, 4);
-			odd = to_read % 2 != 0;
-		}
 	public:
-		uint16_t channels() { return data_format.channels; }
-		uint16_t sample_rate() { return data_format.sample_rate; }
-		uint16_t bits_per_sample() { return data_format.bits_per_sample; }
-		uint16_t data_block_size() { return data_format.data_block_size; }
+		decoder(std::istream& is): istream{ is } {
+			istream.ignore(16); // skip "RIFF", size, "WAVE", "fmt "
 
-		wave_sample_provider(IStream& stream) :stream{ stream} {
-			typedef std::char_traits<char> ch_traits;
-			char temp_4[4];
+			uint32_t fmt_size = estd::get<uint32_t>(istream);
+			if (fmt_size != 16)
+				throw std::runtime_error("unsupported format");
 
-			stream.read(temp_4, 4);
-			if (ch_traits::compare(temp_4, "RIFF", 4) != 0)
-				throw std::exception("invalid data");
-
-			stream.read(temp_4, 4);
-			wave_chunks_bytes = *((uint32_t*)temp_4) - 4;
-
-			stream.read(temp_4, 4);
-			if (ch_traits::compare(temp_4, "WAVE", 4) != 0)
-				throw std::exception("invalid data");
-
-			stream.read(temp_4, 4);
-			if (ch_traits::compare(temp_4, "fmt ", 4) != 0)
-				throw std::exception("invalid data");
-
-			stream.read(temp_4, 4);
-			auto chunk_size = *((uint32_t*)temp_4);
-			if(chunk_size != 16)
-				throw std::exception("unsupported");
-
-			stream.read((char*)(&data_format), chunk_size);
+			fmt = estd::get<data_format>(istream);
 		}
 
-		template<class Container>
-		void get(Container &c) {
-			get(c.data(), c.size());
+		unsigned channels() { return fmt.channels; }
+		unsigned bits_per_sample() { return fmt.bits_per_sample; }
+		unsigned sample_rate() { return fmt.sample_rate; }
+
+		void next_samples(std::vector<uint8_t> vec) {
+			istream.ignore(4); // skip "data"
+			uint32_t size = estd::get<uint32_t>(istream);
+			char* arr = new char(size);
+			vec.insert(vec.end(), arr, arr + size);
+			delete[] arr;
+			
+			if (size & 1 == 1)
+				istream.ignore(1);
 		}
 
-		void get(char* ptr, size_t size) override {
-			typedef std::char_traits<char> ch_traits;
-
-			while (size != 0) {
-				if (to_read == -1)
-					read_data_info();
-
-				stream.read(ptr, size);
-				int read = (int)stream.gcount();
-				to_read -= read;
-				ptr += read;
-				size -= read;
-
-				if (to_read == 0)
-					to_read = -1;
-				if (read == 0)
-					break;
-			}
-		}
-
-		int16_t available() {
-			if (to_read == -1)
-				read_data_info();
-			return to_read;
+		void all_samples(std::vector<uint8_t> vec) {
+			while (istream)
+				next_samples(vec);
 		}
 	};
 }

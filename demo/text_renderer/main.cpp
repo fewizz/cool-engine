@@ -15,7 +15,7 @@ int main() {
 	freetype::library lib;
 
 	freetype::face* face = lib.face_from_istream(ifstream{ "C:/Windows/Fonts/comic.ttf", std::ios::binary });
-	face->set_char_size(64 * 60, 0, 0, 0);
+	face->set_char_size(64 * 50, 0, 0, 0);
 
 	glfw::window window{ glfw::create_window(800, 600, "Test", {window::opengl_debug_context(true)}) };
 
@@ -27,7 +27,7 @@ int main() {
 		std::cout << message << "\n";
 	});
 
-	gfx::text_renderer tr{ u8"The quick brown fox\njumps over the lazy dog", *face, make_shared<program>(
+	gfx::text_renderer tr{ u8"The quick brown fox\njumps over the lazy dog\nТеперь ещё и на русском пишет\nКласс!11!", *face, make_shared<program>(
 		vertex_shader{R"(
 #version 420 core
 
@@ -49,7 +49,6 @@ void main() {
 uniform sampler2D u_atlas;
 
 in vec2 uv_vs;
-in flat int texture_unit_vs;
 out vec4 color;
 
 void main() {

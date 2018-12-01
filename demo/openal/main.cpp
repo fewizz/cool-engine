@@ -23,11 +23,12 @@ int main() {
 
 	path path("C:\\Program Files (x86)\\OpenAL 1.1 SDK\\samples\\media\\stereo.wav");
 	ifstream stream(path, std::ios::binary);
-	wav::wave_sample_provider<ifstream> d{ stream };
-	vector<char> bytes(400000);
-	d.get(bytes);
+	wav::decoder decoder{ stream };
 
-	buff.data(d.channels(), d.bits_per_sample(), bytes, d.sample_rate());
+	vector<uint8_t> bytes;
+	decoder.all_samples(bytes);
+
+	buff.data(decoder.channels(), decoder.bits_per_sample(), bytes, decoder.sample_rate());
 
 	cout << al::internal::get_error() << "\n";
 

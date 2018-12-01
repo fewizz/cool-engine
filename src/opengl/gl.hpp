@@ -257,14 +257,13 @@ namespace gl {
 			bind(tar, name);
 		}
 
-		int get_level_parameter_i_(unsigned pname, int level = 0);
+		int get_level_parameter_i(unsigned pname, int level = 0);
 	public:
 		~texture();
 		void bind() override;
 
 		unsigned width() {
-			bind();
-			return get_level_parameter_i_(0x1000);
+			return get_level_parameter_i(0x1000);
 		}
 	};       
 
@@ -277,8 +276,7 @@ namespace gl {
 		texture_2d():texture{ texture_target::texture_2d } {}
 
 		unsigned height() {
-			bind();
-			return get_level_parameter_i_(0x1001);
+			return get_level_parameter_i(0x1001);
 		}
 
 		template<class T>
