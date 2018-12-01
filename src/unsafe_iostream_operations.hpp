@@ -4,9 +4,9 @@
 namespace estd {
 	template<class T>
 	std::unique_ptr<T*> get(std::istream& istream, size_t count) {
-		size_t size = sizeof(T * count);
-		std::unique_ptr<char*> arr = std::make_unique<char*>(size);
-		istream.read((char*)arr.get(), size);
+		size_t size = sizeof(T)*count;
+		std::unique_ptr<char*> arr = std::make_unique<char*>(new char[size]);
+		istream.read(*arr, size);
 		return arr;
 	}
 

@@ -43,19 +43,25 @@ namespace wav {
 		unsigned bits_per_sample() { return fmt.bits_per_sample; }
 		unsigned sample_rate() { return fmt.sample_rate; }
 
-		void next_samples(std::vector<uint8_t> vec) {
-			istream.ignore(4); // skip "data"
+		void next_samples(std::vector<uint8_t>& vec) {
+			std::unique_ptr<char*> str = estd::get<char>(istream, 4);
+			std::string chunk_name{ *str, 4 };
+			std::cout << chunk_name;
+			if (chunk_name != "data")
+				return;
+
 			uint32_t size = estd::get<uint32_t>(istream);
-			char* arr = new char(size);
+			char* arr = new char[size];
+			istream.read(arr, size);
 			vec.insert(vec.end(), arr, arr + size);
 			delete[] arr;
 			
-			if (size & 1 == 1)
+			if (size % 2 == 1)
 				istream.ignore(1);
 		}
 
-		void all_samples(std::vector<uint8_t> vec) {
-			while (istream)
+		void all_samples(std::vector<uint8_t>& vec) {
+			while (!istream.eof())
 				next_samples(vec);
 		}
 	};
