@@ -1,5 +1,3 @@
-/*#ifndef _FREETYPE_LIBRARY_
-#define _FREETYPE_LIBRARY_*/
 #pragma once
 #include <vector>
 #include <istream>
@@ -35,5 +33,3 @@ namespace freetype {
 		~library();
 	};
 }
-
-//#endif

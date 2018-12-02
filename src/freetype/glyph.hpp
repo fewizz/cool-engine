@@ -1,9 +1,3 @@
-/*#ifndef _FREETYPE_FACE_
-#include "face.hpp"
-#endif
-
-#ifndef _FREETYPE_GLYPH_SLOT_
-#define _FREETYPE_GLYPH_SLOT_*/
 #pragma once
 #include "face.hpp"
 
@@ -54,5 +48,3 @@ namespace freetype {
 		int bitmap_top();
 	};
 }
-
-//#endif

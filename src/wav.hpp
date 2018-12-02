@@ -15,20 +15,20 @@ namespace wav {
 		extensible = 0xfffe
 	};
 
+	struct data_format {
+		format_tag tag;
+		uint16_t channels;
+		uint32_t sample_rate;
+		uint32_t data_rate;
+		uint16_t data_block_size;
+		uint16_t bits_per_sample;
+	};
+
 	class decoder {
+	public:
+		data_format fmt;
 		std::istream& istream;
 
-		struct data_format {
-			format_tag tag;
-			uint16_t channels;
-			uint32_t sample_rate;
-			uint32_t data_rate;
-			uint16_t data_block_size;
-			uint16_t bits_per_sample;
-		};
-		data_format fmt;
-
-	public:
 		decoder(std::istream& is): istream{ is } {
 			istream.ignore(16); // skip "RIFF", size, "WAVE", "fmt "
 
@@ -44,10 +44,7 @@ namespace wav {
 		unsigned sample_rate() { return fmt.sample_rate; }
 
 		void next_samples(std::vector<uint8_t>& vec) {
-			std::unique_ptr<char*> str = estd::get<char>(istream, 4);
-			std::string chunk_name{ *str, 4 };
-			std::cout << chunk_name;
-			if (chunk_name != "data")
+			if (std::string{ *estd::get<char>(istream, 4), 4 } != "data")
 				return;
 
 			uint32_t size = estd::get<uint32_t>(istream);
@@ -56,13 +53,19 @@ namespace wav {
 			vec.insert(vec.end(), arr, arr + size);
 			delete[] arr;
 			
-			if (size % 2 == 1)
+			if (size % 2 == 1) // padding
 				istream.ignore(1);
 		}
 
-		void all_samples(std::vector<uint8_t>& vec) {
+		void remaining_samples(std::vector<uint8_t>& vec) {
 			while (!istream.eof())
 				next_samples(vec);
 		}
 	};
+
+	data_format decode(std::istream& istream, std::vector<uint8_t>& vec) {
+		decoder d{ istream };
+		d.remaining_samples(vec);
+		return d.fmt;
+	}
 }

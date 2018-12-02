@@ -10,8 +10,6 @@
 
 namespace gfx {
 	class text_renderer : public verticies_renderer {
-		//std::vector<gl::texture_2d*> glyph_textures;
-		//std::unique_ptr<gfx::fixed_texture_atlas> tex_atlas;
 		gfx::fixed_texture_atlas* tex_atlas;
 		std::string text;
 		std::vector<int> textures_array_texture_units;
@@ -109,11 +107,6 @@ namespace gfx {
 
 			vertex_attrib_data(program->attrib_location("a_position"), gl::vertex_attribute::size{ 2 }, gl::vertex_attribute::normalized{ false }, positions);
 			vertex_attrib_data(program->attrib_location("a_uv"), gl::vertex_attribute::size{ 2 }, gl::vertex_attribute::normalized{ false }, uvs);
-			//vertex_attrib_i_data(program->attrib_location("a_texture_unit"), gl::vertex_attribute::size{ 1 }, tex_units);
-
-			//textures_array_texture_units = std::vector<int>(glyph_textures.size());
-			//for (int i = 0; i < glyph_textures.size(); i++)
-			//	textures_array_texture_units[i] = i;
 		}
 
 		void render() override {

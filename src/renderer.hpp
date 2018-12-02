@@ -23,6 +23,24 @@ namespace gfx {
 		virtual ~renderer() {}
 	};
 
+
+
+	template<class... Types>
+	struct vertex_attributes {
+		Types... types;
+	};
+
+	template<class... Types>
+	struct vertex_data : vertex_data<Types...> {
+		std::vector<Types> head;
+
+		vertex_data(vertex_attributes<HeadType, Types...> attribs):vertex_data(T) {
+
+		}
+	};
+
+
+
 	class verticies_renderer : public renderer {
 	protected:
 		std::shared_ptr<gl::vertex_array> vao_;
@@ -54,6 +72,11 @@ namespace gfx {
 		template<class MatrixProvider>
 		void matrix(std::string name, MatrixProvider matrix_provider) {
 			matrix_providers[name] = matrix_provider;
+		}
+
+		template<class... Types>
+		void vertex_data(vertex_data<Types...> data) {
+
 		}
 
 		template <class C>

@@ -1,9 +1,3 @@
-/*#ifndef _FREETYPE_LIBRARY_
-#include "library.hpp"
-#endif
-
-#ifndef _FREETYPE_FACE_
-#define _FREETYPE_FACE_*/
 #pragma once
 #include "library.hpp"
 #include "glyph.hpp"
@@ -53,5 +47,3 @@ namespace freetype {
 		};
 	};
 }
-
-//#endif
