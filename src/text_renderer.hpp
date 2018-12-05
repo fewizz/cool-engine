@@ -7,22 +7,23 @@
 #include "utf8.h"
 #include "fixed_texture_atlas.hpp"
 #include <algorithm>
+#include <cmath>
 
 namespace gfx {
 	class text_renderer : public verticies_renderer {
-		gfx::fixed_texture_atlas* tex_atlas;
+		gfx::fixed_texture_atlas tex_atlas;
 		std::string text;
 		std::vector<int> textures_array_texture_units;
+
+		static int calculate_max_size(freetype::face& face) {
+			freetype::bbox global_box{ face.get_bbox() };
+			unsigned side_size = std::max(global_box.x_max - global_box.x_min, global_box.y_max - global_box.x_min);
+			return ceil(side_size / 64);
+		}
 	public:
+
 		text_renderer(std::string str, freetype::face& face, std::shared_ptr<gl::program> program)
-			:verticies_renderer(program, gl::primitive_type::triangles), text{ str } {
-
-			freetype::bbox b{ face.get_bbox() };
-
-			unsigned side_size = std::max(b.x_max - b.x_min, b.y_max - b.x_min);
-			side_size /= 64;
-			side_size++;
-			tex_atlas = new gfx::fixed_texture_atlas(side_size, 30);
+			:verticies_renderer(program, gl::primitive_type::triangles), text{ str }, tex_atlas{calculate_max_size(face), 30} {
 
 			std::vector<float> positions;
 			std::vector<float> uvs;
@@ -82,15 +83,15 @@ namespace gfx {
 						w = h = 1;
 					}
 
-					std::pair<unsigned, unsigned> right_bot = tex_atlas->add(w, h, data.data());
+					std::pair<unsigned, unsigned> right_bot = tex_atlas.add(w, h, data.data());
 					char_uv[code_point] = right_bot;
 				}
 
 				std::pair<unsigned, unsigned> p = char_uv[code_point];
-				float x = p.first / (float)tex_atlas->width();
-				float y = p.second / (float)tex_atlas->height();
-				float w = metrics.width() / 64.0 / (float)tex_atlas->width();
-				float h = metrics.height() / 64.0 / (float)tex_atlas->height();
+				float x = p.first / (float)tex_atlas.width();
+				float y = p.second / (float)tex_atlas.height();
+				float w = metrics.width() / 64.0 / (float)tex_atlas.width();
+				float h = metrics.height() / 64.0 / (float)tex_atlas.height();
 
 				uvs.insert(uvs.end(),
 					{
@@ -111,9 +112,8 @@ namespace gfx {
 
 		void render() override {
 			update_matricies_uniforms();
-			unsigned location = program->unifrom_location("u_atlas");
-			gl::active_texture(*tex_atlas, 0);
-			program->uniform_1i(location, 0);
+			gl::active_texture(tex_atlas, 0);
+			program->uniform_1i(program->unifrom_location("u_atlas"), 0);
 			draw_arrays(pt, 0, 6 * text.length(), program, vao_);
 		}
 	};

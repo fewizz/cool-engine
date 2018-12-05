@@ -44,6 +44,18 @@ target_link_libraries(utility-heap ${OPENGL_LIBRARIES})
 target_link_libraries(utility-heap ${LIB_DIR}/OpenAL32.lib)
 target_link_libraries(utility-heap ${LIB_DIR}/freetype.lib)
 
+# triangle
+file(GLOB_RECURSE TRIANGLE_FILES
+	./demo/triangle/*.cpp
+	./demo/triangle/*.hpp)
+	
+add_executable(demo-triangle ${TRIANGLE_FILES})
+set_property(TARGET demo-triangle PROPERTY CXX_STANDARD 17)
+target_link_libraries(demo-triangle utility-heap)
+include_directories(libs/include/ src/)
+
+source_group("Files" FILES ${TRIANGLE_FILES})
+
 # text renderer
 file(GLOB_RECURSE TEXT_RENDERER_FILES
 	./demo/text_renderer/*.cpp
@@ -52,7 +64,6 @@ file(GLOB_RECURSE TEXT_RENDERER_FILES
 add_executable(demo-text-renderer ${TEXT_RENDERER_FILES})
 set_property(TARGET demo-text-renderer PROPERTY CXX_STANDARD 17)
 target_link_libraries(demo-text-renderer utility-heap)
-#target_link_libraries(demo-text-renderer ${LIB_DIR}/glfw3.lib)
 include_directories(libs/include/ src/)
 
 source_group("Files" FILES ${TEXT_RENDERER_FILES})
@@ -77,7 +88,6 @@ file(GLOB_RECURSE GUI_FILES
 add_executable(demo-gui ${GUI_FILES})
 set_property(TARGET demo-gui PROPERTY CXX_STANDARD 17)
 target_link_libraries(demo-gui utility-heap)
-#target_link_libraries(demo-gui ${LIB_DIR}/glfw3.lib)
 include_directories(libs/include/ src/)
 
 source_group("Files" FILES ${GUI_FILES})

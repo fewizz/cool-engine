@@ -43,7 +43,7 @@ namespace gl {
 
 	void buffer::data(size_t bytes, const void * data, buffer_usage usage) {
 		bind();
-		glBufferData(target(), bytes, data, usage);
+		glBufferData(target, bytes, data, usage);
 	}
 
 	/* Vertex array */
@@ -85,7 +85,7 @@ namespace gl {
 	void texture::bind(texture_target tar, unsigned name) {
 		glBindTexture(tar, name);
 	}
-	void texture::bind() { bind(target(), name); }
+	void texture::bind() { bind(target, name); }
 	texture::~texture() {
 		glDeleteTextures(1, &name); invalidate_name();
 #if LOG_DESTRUCT
@@ -95,7 +95,7 @@ namespace gl {
 	int texture::get_level_parameter_i(unsigned pname, int level) {
 		bind();
 		int param;
-		glGetTexLevelParameteriv(target(), level, pname, &param);
+		glGetTexLevelParameteriv(target, level, pname, &param);
 		return param;
 	}
 
@@ -114,7 +114,7 @@ namespace gl {
 
 	void texture_2d::storage(unsigned levels, internal_format if_, unsigned w, unsigned h) {
 		bind();
-		glTexStorage2D(target(), levels, if_, w, h);
+		glTexStorage2D(target, levels, if_, w, h);
 	}
 
 	/* Sampler */
@@ -191,24 +191,13 @@ namespace gl {
 	//void program::uniform_1iv(unsigned location, int* begin, int* end) { use(); glUniform1iv(location, std::distance(begin, end), begin); }
 
 	//
-	void draw_arrays(primitive_type pt, unsigned start, size_t count, std::shared_ptr<program> prog) {
-		prog->use();
+	void draw_arrays(primitive_type pt, unsigned start, size_t count, gl::program& prog) {
+		prog.use();
 		glDrawArrays(pt, start, (GLsizei)count);
 	}
-	void draw_arrays(primitive_type pt, unsigned start, size_t count, std::shared_ptr<program> prog,
-		std::shared_ptr<vertex_array> vao) {
-
-		vao->bind();
+	void draw_arrays(primitive_type pt, unsigned start, size_t count, gl::program& prog, gl::vertex_array& vao) {
+		vao.bind();
 		draw_arrays(pt, start, count, prog);
-	}
-	void draw_arrays(primitive_type pt, unsigned start, size_t count, std::shared_ptr<program> prog,
-		std::shared_ptr<vertex_array> vao, std::map<const unsigned, texture*> texture_units) {
-
-		for (std::pair<unsigned, texture*> p : texture_units) {
-			active_texture(*p.second, p.first);
-		}
-
-		draw_arrays(pt, start, count, prog, vao);
 	}
 
 	void active_texture(texture& tex, unsigned index) {
@@ -227,11 +216,8 @@ namespace gl {
 		glClearColor(r, g, b, a);
 	}
 
-	void clear(std::initializer_list<clear_buffer> mask) {
-		unsigned r = 0;
-		for (auto x : mask)
-			r |= x;
-		glClear(r);
+	void internal::clear(unsigned mask) {
+		glClear(mask);
 	}
 
 	void viewport(int x, int y, unsigned w, unsigned h) {

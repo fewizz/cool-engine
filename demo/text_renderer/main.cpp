@@ -63,6 +63,7 @@ void main() {
 	});
 
 	gl::clear_color(0, 0, 0, 1);
+
 	while (!window.should_close())
 	{
 		clear({ color_buffer });

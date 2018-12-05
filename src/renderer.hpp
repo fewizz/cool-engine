@@ -9,39 +9,59 @@
 #include <glm/mat4x4.hpp>
 
 namespace gfx {
+
+	/*class program_validator {
+		std::shared_ptr<gl::program> program;
+
+	public:
+		program_validator() {}
+		program_validator(std::shared_ptr<gl::program> program) :program{ program } {}
+
+		void pre_render_call() {
+		}
+
+		void post_render_call() {
+		}
+	};*/
+
 	class renderer {
 	protected:
-		std::shared_ptr<gl::program> program;
+		//std::shared_ptr<gl::program> program;
 	public:
-		explicit renderer(std::shared_ptr<gl::program> program) :program{ program } {}
-		explicit renderer(gl::program&& program) :program{ new gl::program{std::move(program)} } {};
-		renderer(const renderer&) = delete;
-		renderer& operator=(const renderer&) = delete;
+		//renderer();
+		//explicit renderer(std::shared_ptr<gl::program> program) :program{ program } {}
+		//explicit renderer(gl::program&& program) :program{ new gl::program{std::move(program)} } {};
+		//renderer(const renderer&) = delete;
+		//renderer& operator=(const renderer&) = delete;
 
 		virtual void render() = 0;
-		//virtual void resize(int w, int h) {}
+
+		//virtual void render(gl::primitive_type pt, size_t count, unsigned start = 0) {
+		//	gl::draw_arrays(pt, start, count, *program);
+		//};
+
 		virtual ~renderer() {}
 	};
 
 
 
-	template<class... Types>
+	/*template<class... Types>
 	struct vertex_attributes {
 		Types... types;
 	};
 
 	template<class... Types>
 	struct vertex_data : vertex_data<Types...> {
-		std::vector<Types> head;
+		std::tuple< std::vector<Types>... > vectors;
 
 		vertex_data(vertex_attributes<HeadType, Types...> attribs):vertex_data(T) {
 
 		}
-	};
+	};*/
 
 
 
-	class verticies_renderer : public renderer {
+	/*class verticies_renderer : public renderer {
 	protected:
 		std::shared_ptr<gl::vertex_array> vao_;
 		gl::primitive_type pt;
@@ -74,10 +94,9 @@ namespace gfx {
 			matrix_providers[name] = matrix_provider;
 		}
 
-		template<class... Types>
-		void vertex_data(vertex_data<Types...> data) {
-
-		}
+		//template<class... Types>
+		//void vertex_data(vertex_data<Types...> data) {
+		//}
 
 		template <class C>
 		void vertex_attrib_data(gl::vertex_attribute::location location, gl::vertex_attribute::size size,
@@ -109,11 +128,31 @@ namespace gfx {
 			buffers.push_back(std::move(buff));
 		}
 
-		void render() override {
+		void render(gl::primitive_type pt, unsigned start, size_t count, gl::vertex_array& vao) {
 			update_matricies_uniforms();
-			gl::draw_arrays(pt, 0, (unsigned)(vao_->attrib_buffer(0)->size() / vao_->attrib_size(0)), program, vao_);
+			gl::draw_arrays(pt, start, count, program, vao);
 		}
 	};
+
+	/*class textured_verticies_renderer : public verticies_renderer {
+		std::vector<std::pair<unsigned, std::shared_ptr<gl::texture>>> textures;
+
+	public:
+		using verticies_renderer::verticies_renderer;
+
+		void texture(unsigned location, std::shared_ptr<gl::texture> tex) {
+			textures.push_back({ location, tex });
+		}
+
+		void render() override {
+			for (std::pair<unsigned, std::shared_ptr<gl::texture>> p : textures) {
+				active_texture(*p.second, p.first);
+				program->uniform_1i(p.first, 0);
+			}
+
+			verticies_renderer::render();
+		}
+	};*/
 
 }
 /*template<class Vec2>

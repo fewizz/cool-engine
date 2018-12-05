@@ -8,11 +8,11 @@ void glfw::internal::init() {
 	glfwInit();
 }
 
-void glfw::window::hint::set_hint() {
+void glfw::window::hints::hint::set_hint() {
 	glfwWindowHint(code, value);
 }
 
-glfw::window&& glfw::create_window(int width, int height, std::string title, std::vector<glfw::window::hint> hints) {
+glfw::window&& glfw::create_window(int width, int height, std::string title, std::vector<glfw::window::hints::hint> hints) {
 	internal::init();
 
 	for (auto hint : hints)
@@ -31,6 +31,13 @@ bool glfw::window::should_close() {
 
 void glfw::window::swap_buffers() {
 	glfwSwapBuffers(static_cast<GLFWwindow*>(window_ptr));
+}
+
+std::pair<int, int> glfw::window::get_framebuffer_size() {
+	int w;
+	int h;
+	glfwGetFramebufferSize((GLFWwindow*)window_ptr, &w, &h);
+	return { w, h };
 }
 
 void glfw::poll_events() {
