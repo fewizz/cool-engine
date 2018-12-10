@@ -10,6 +10,14 @@ namespace gl {
 			pixel_pack = 0x88EB,
 			pixel_unpack = 0x88EC
 		};
+
+		void gen_buffers(unsigned n, unsigned* buffers);
+		void bind_buffer(unsigned target, unsigned buffer);
+		void delete_buffers(unsigned n, unsigned* buffers);
+
+		void buffer_data(unsigned target, unsigned size, const void* data, unsigned usage);
+		void buffer_sub_data(unsigned target, unsigned offset, unsigned size, const void* data);
+		void get_buffer_parameteriv(unsigned target, unsigned pname, int* data);
 	}
 
 	enum buffer_usage : unsigned {
@@ -26,47 +34,70 @@ namespace gl {
 	protected:
 		internal::buffer_target target;
 
-		static unsigned gen();
-		static void bind(unsigned target, unsigned name);
-		static void parameteriv(unsigned tar, unsigned value, int* data);
-
 		buffer(buffer&& r) :with_name{ std::move(r) }, target{ r.target } { }
-		buffer(internal::buffer_target tar) : with_name{ gen() }, target{ tar } {
-			bind(tar, name);
+
+		buffer(internal::buffer_target tar) : target{ tar } {
+			internal::gen_buffers(1, &name);
+			internal::bind_buffer(tar, name);
 		}
+
 		buffer(unsigned name, internal::buffer_target tar) : with_name{ name }, target{ tar } {}
 
-		void bind() override { bind(target, name); }
-
-		void data(size_t bytes, const void * data, buffer_usage usage = buffer_usage::static_draw);
-		void sub_data(unsigned offset, size_t bytes, const void * data);
+		void bind() override { internal::bind_buffer(target, name); }
 	public:
-		~buffer();
+		~buffer() {
+			if (name != invalid_name) {
+				internal::delete_buffers(1, &name);
+				invalidate_name();
+			}
+		}
 
 		size_t size() {
 			bind();
 			int size;
-			parameteriv(target, 0x8764, &size);
+			gl::internal::get_buffer_parameteriv(target, 0x8764, &size);
 			return size;
 		}
 
 		template<class RAI>
 		void data(RAI begin, RAI end, gl::buffer_usage usage = gl::buffer_usage::static_draw) {
-			data(std::distance(begin, end) * sizeof(std::iterator_traits<RAI>::value_type), &*begin, usage);
+			bind();
+			gl::internal::buffer_data(target, std::distance(begin, end) * sizeof(std::iterator_traits<RAI>::value_type), &*begin, usage);
 		}
 
 		template<class Container>
 		void data(Container container, buffer_usage usage = buffer_usage::static_draw) {
-			data(sizeof(Container::value_type)*container.size(), container.data(), usage);
+			bind();
+			gl::internal::buffer_data(sizeof(Container::value_type)*container.size(), container.data(), usage);
 		}
 
 		void data(size_t size, buffer_usage usage = buffer_usage::static_draw) {
-			data(size, nullptr, usage);
+			bind();
+			gl::internal::buffer_data(target, size, nullptr, usage);
 		}
 
 		template<class Container>
 		void sub_data(unsigned offset, Container container) {
-			sub_data(offset, sizeof(Container::value_type) * container.size(), container.data());
+			bind();
+			internal::sub_data(target, offset, sizeof(Container::value_type) * container.size(), container.data());
 		}
+	};
+
+	class array_buffer : public buffer {
+	public:
+		array_buffer(array_buffer&& r) :buffer(std::move(r)) {}
+
+		template<class Container>
+		array_buffer(Container c) : buffer(internal::buffer_target::array) {
+			data<Container>(c);
+		}
+		array_buffer(unsigned name) : buffer(name, internal::buffer_target::array) {}
+		array_buffer() : buffer(internal::buffer_target::array) {}
+	};
+
+	class element_array_buffer : public buffer {
+	public:
+		element_array_buffer(unsigned name) : buffer(name, internal::buffer_target::element_array) {}
+		element_array_buffer() : buffer(internal::buffer_target::element_array) {}
 	};
 }

@@ -15,6 +15,7 @@ namespace gl {
 			name = invalid_name;
 		}
 	public:
+		with_name() {}
 		with_name(unsigned name) :name{ name } {}
 		with_name(with_name&& o) :name{ o.name } {
 			o.invalidate_name();

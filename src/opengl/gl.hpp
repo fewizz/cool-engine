@@ -11,154 +11,12 @@
 #include <type_traits>
 
 namespace gl {
-	template<class T>
-	std::shared_ptr<T> view(unsigned name) {
-		T* ptr = new T(name);
-		return std::shared_ptr<T>( ptr, [](T* p) {p->invalidate_name();  delete p; } );
-	}
-
-	template<class T>
-	std::shared_ptr<T> view(T& t) {
-		return view<T>(t.name);
-	}
-
-	namespace internal {
-		template<class T>
-		static unsigned constexpr type_token() {
-			if (std::is_same_v<T, int8_t>)
-				return 0x1400;
-			if (std::is_same_v<T, uint8_t>)
-				return 0x1401;
-			if (std::is_same_v<T, int32_t>)
-				return 0x1404;
-			if (std::is_same_v<T, uint32_t>)
-				return 0x1405;
-			if (std::is_same_v<T, float_t>)
-				return 0x1406;
-			else throw std::exception("GL: can't find appr. type");
-		}
-	}
-
-	class vertex_array;
-	class program;
-	class shader;
-	class texture;
-	class texture_2d;
 
 	class context {
 	public:
 	};
 
 	context wrap_context();
-	
-
-	// §4.1
-	class fence_sync;
-	enum class sync_status:unsigned;
-
-	class fence_sync {
-		friend sync_status client_wait_sync(fence_sync, unsigned);
-		friend void wait_sync(fence_sync);
-		void* ptr;
-	public:
-		fence_sync();
-	};
-
-	enum class sync_status:unsigned {
-		already_signaled = 0x911A,
-		timeout_expired = 0x911B,
-		condition_satisfied = 0x911C,
-		wait_failed = 0x911D
-	};
-
-	sync_status client_wait_sync(fence_sync, unsigned);
-	void wait_sync(fence_sync);
-
-	// §4.2
-	// TODO
-
-	class query : public with_name {
-		static unsigned gl_gen();
-	};
-
-	class array_buffer : public buffer {
-	public:
-		array_buffer(array_buffer&& r) :buffer(std::move(r)) {}
-
-		template<class Container>
-		array_buffer(Container c):buffer(buffer_target::array) {
-			data<Container>(c);
-		}
-		array_buffer(unsigned name) : buffer(name, buffer_target::array) {} 
-		array_buffer() : buffer(buffer_target::array) {}
-	};
-
-	class element_array_buffer : public buffer {
-	public:
-		element_array_buffer(unsigned name) : buffer(name, buffer_target::element_array) {}
-		element_array_buffer() : buffer(buffer_target::element_array) {}
-	};
-
-	enum primitive_type :unsigned;
-	void draw_arrays(primitive_type pt, unsigned start, size_t count, gl::program& prog);
-
-	namespace vertex_attribute {
-		typedef unsigned int size;
-		typedef unsigned int location;
-		typedef bool normalized;
-	}
-
-	class vertex_array : public bindable, with_name {
-		friend void draw_arrays(primitive_type, unsigned, size_t, gl::program& prog);
-		static unsigned gen();
-		static void get_attribiv(unsigned index, unsigned pname, int* params);
-		static void vertex_attrib_pointer(unsigned index, unsigned size, unsigned type, bool normalized, unsigned stride, void* pointer);
-		static void vertex_attrib_i_pointer(unsigned index, unsigned size, unsigned type, unsigned stride, void* pointer);
-		static void bind(unsigned name);
-	public:
-		~vertex_array();
-
-		vertex_array() : with_name{ gen() } {
-			bind();
-		}
-		vertex_array(vertex_array&& v):with_name{ std::move(v) } {}
-
-		vertex_array(unsigned name):with_name{name} {}
-
-		void bind() override { bind(name); };
-
-		std::shared_ptr<array_buffer> attrib_array_buffer(unsigned index) {
-			bind();
-			unsigned pointer[1];
-			get_attribiv(index, 0x889F, (int*)pointer);
-			return view<array_buffer>(*pointer);
-		}
-
-		template<class T>
-		void attrib_pointer(vertex_attribute::location location, vertex_attribute::size size, buffer& buff, vertex_attribute::normalized normalized = false) {
-			bind();
-			buff.bind();
-			vertex_attrib_pointer(location, size, internal::type_token<T>(), normalized, 0, nullptr);
-		}
-
-		template<class T>
-		void attrib_i_pointer(vertex_attribute::location location, vertex_attribute::size size, buffer& buff) {
-			bind();
-			buff.bind();
-			vertex_attrib_i_pointer(location, size, internal::type_token<T>(), 0, nullptr);
-		}
-
-		unsigned attrib_size(unsigned index){
-			bind();
-			unsigned pointer[1];
-			get_attribiv(index, 0x8623, (int*)pointer);
-			return *pointer;
-		}
-
-		void bind_vertex_buffer(unsigned binding_index, buffer& buffer);
-
-		void enable_attrib_array(unsigned index);
-	};
 
 	enum internal_format:unsigned {
 		rgba8 = 0x8058
@@ -282,15 +140,6 @@ namespace gl {
 	class fragment_shader : public shader {
 	public:
 		fragment_shader(std::string src) :shader(shader_type::fragment_shader, src) {}
-	};
-
-	enum primitive_type :unsigned {
-		lines = 1,
-		line_loop,
-		line_strip,
-		triangles,
-		triangle_strip,
-		triangle_fan
 	};
 
 	class program :public with_name {
