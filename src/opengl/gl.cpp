@@ -31,10 +31,10 @@ namespace gl {
 		glBindBuffer(t, n);
 	}
 	buffer::~buffer() {
-		glDeleteBuffers(1, &name); invalidate_name();
 #if LOG_DESTRUCT
-		std::cout << "buffer destruct\n";
+		std::cout << "buffer destruct " << name << "\n";
 #endif
+		glDeleteBuffers(1, &name); invalidate_name();
 	}
 
 	void buffer::parameteriv(unsigned tar, unsigned value, int* data) {
@@ -44,6 +44,11 @@ namespace gl {
 	void buffer::data(size_t bytes, const void * data, buffer_usage usage) {
 		bind();
 		glBufferData(target, bytes, data, usage);
+	}
+
+	void buffer::sub_data(unsigned offset, size_t bytes, const void * data) {
+		bind();
+		glBufferSubData(target, offset, bytes, data);
 	}
 
 	/* Vertex array */
@@ -74,6 +79,11 @@ namespace gl {
 	void vertex_array::enable_attrib_array(unsigned index) {
 		bind();
 		glEnableVertexAttribArray(index);
+	}
+
+	void vertex_array::bind_vertex_buffer(unsigned binding_index, buffer& buffer) {
+		bind();
+		glBindVertexBuffer(binding_index, buffer.name, 0, 0);
 	}
 
 	/* Texture */
@@ -130,12 +140,16 @@ namespace gl {
 	void sampler::texture_wrap_r(wrap_mode wm) { glSamplerParameteri(name, GL_TEXTURE_WRAP_R, wm); }
 
 	/* Shader */
-	unsigned shader::create(shader::shader_type type) { return glCreateShader(type); }
+	unsigned shader::create(shader::shader_type type) {
+		return glCreateShader(type);
+	}
 	shader::~shader() {
-		glDeleteShader(name); invalidate_name();
+		if (name == invalid_name)
+			return;
 #if LOG_DESTRUCT
-		std::cout << "shader destruct\n";
+		std::cout << "shader destruct " << name << "\n";
 #endif
+		glDeleteShader(name); invalidate_name();
 	}
 
 	void shader::source(std::string src) {
@@ -145,13 +159,12 @@ namespace gl {
 
 	void shader::compile() {
 		glCompileShader(name);
-		GLint i{};
-		GLint* status{ &i };
-		glGetShaderiv(name, GL_COMPILE_STATUS, status);
-		if (*status == GL_FALSE) {
-			glGetShaderiv(name, GL_INFO_LOG_LENGTH, status);
-			char* mess = new char[*status];
-			glGetShaderInfoLog(name, *status, nullptr, mess);
+		int status;
+		glGetShaderiv(name, GL_COMPILE_STATUS, &status);
+		if (status == GL_FALSE) {
+			glGetShaderiv(name, GL_INFO_LOG_LENGTH, &status);
+			char* mess = new char[status];
+			glGetShaderInfoLog(name, status, nullptr, mess);
 			throw shader_compilation_error(this, mess);
 		}
 	}
@@ -159,14 +172,28 @@ namespace gl {
 	/* Program */
 	unsigned program::create() { return glCreateProgram(); }
 	program::~program() {
-		glDeleteProgram(name); invalidate_name();
+		if (name == invalid_name)
+			return;
 #if LOG_DESTRUCT
-		std::cout << "program destruct\n";
+		std::cout << "program destruct " << name << "\n";
 #endif
+		glDeleteProgram(name); invalidate_name();
 	}
 
-	void program::attach(const shader& sh) { glAttachShader(name, sh.name); }
-	void program::link() { glLinkProgram(name); }
+	void program::attach(shader& sh) { glAttachShader(name, sh.name); }
+	void program::detach(shader& sh) { glDetachShader(name, sh.name); }
+	void program::link() {
+		glLinkProgram(name);
+		int status;
+		glGetProgramiv(name, GL_LINK_STATUS, &status);
+		if (status == GL_FALSE) {
+			int length;
+			glGetProgramiv(name, GL_INFO_LOG_LENGTH, &length);
+			char* str = new char[length];
+			glGetProgramInfoLog(name, length, nullptr, str);
+			throw std::exception(str);
+		}
+	}
 	void program::use() { glUseProgram(name); }
 	unsigned program::attrib_location(std::string attrib_name) {
 		int loc = glGetAttribLocation(name, attrib_name.c_str());
@@ -189,15 +216,8 @@ namespace gl {
 	void program::uniform_1uiv(unsigned location, size_t count, const unsigned* ptr) { glUniform1uiv(location, (GLsizei)count, ptr); }
 	//void program::uniform_1uiv(unsigned location, unsigned* begin, unsigned* end) { use(); glUniform1uiv(location, std::distance(begin, end), begin); }
 	//void program::uniform_1iv(unsigned location, int* begin, int* end) { use(); glUniform1iv(location, std::distance(begin, end), begin); }
-
-	//
-	void draw_arrays(primitive_type pt, unsigned start, size_t count, gl::program& prog) {
-		prog.use();
+	void program::draw_arrays_(primitive_type pt, unsigned start, size_t count) {
 		glDrawArrays(pt, start, (GLsizei)count);
-	}
-	void draw_arrays(primitive_type pt, unsigned start, size_t count, gl::program& prog, gl::vertex_array& vao) {
-		vao.bind();
-		draw_arrays(pt, start, count, prog);
 	}
 
 	void active_texture(texture& tex, unsigned index) {

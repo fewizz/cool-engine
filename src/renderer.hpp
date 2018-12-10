@@ -24,23 +24,26 @@ namespace gfx {
 		}
 	};*/
 
-	class renderer {
-	protected:
-		//std::shared_ptr<gl::program> program;
-	public:
-		//renderer();
-		//explicit renderer(std::shared_ptr<gl::program> program) :program{ program } {}
-		//explicit renderer(gl::program&& program) :program{ new gl::program{std::move(program)} } {};
-		//renderer(const renderer&) = delete;
-		//renderer& operator=(const renderer&) = delete;
-
+	struct renderer {
 		virtual void render() = 0;
+	};
 
-		//virtual void render(gl::primitive_type pt, size_t count, unsigned start = 0) {
-		//	gl::draw_arrays(pt, start, count, *program);
-		//};
+	//using renderer = renderable;
 
-		virtual ~renderer() {}
+	class shader_renderer : public renderer {
+	protected:
+		std::shared_ptr<gl::program> program;
+	public:
+		explicit shader_renderer(std::shared_ptr<gl::program> program) :program { program } {}
+		explicit shader_renderer(gl::program&& program):program { new gl::program{std::move(program)} } {};
+		shader_renderer(const shader_renderer&) = delete;
+		shader_renderer& operator=(const shader_renderer&) = delete;
+
+		std::shared_ptr<gl::program> get_program() {
+			return program;
+		}
+
+		virtual ~shader_renderer() {}
 	};
 
 
@@ -61,44 +64,40 @@ namespace gfx {
 
 
 
-	/*class verticies_renderer : public renderer {
+	class verticies_renderer : public shader_renderer {
 	protected:
-		std::shared_ptr<gl::vertex_array> vao_;
-		gl::primitive_type pt;
-		std::map<std::string, std::function<glm::mat4(void)>> matrix_providers;
-		std::vector<std::unique_ptr<gl::array_buffer>> buffers;
+		std::shared_ptr<gl::vertex_array> vertex_array;
+		//gl::primitive_type pt;
+		//std::map<std::string, std::function<glm::mat4(void)>> matrix_providers;
+		//std::vector<std::unique_ptr<gl::array_buffer>> buffers;
 
-		void update_matricies_uniforms() {
-			for (auto mat : matrix_providers) {
-				program->uniform_matrix4fv(program->unifrom_location(mat.first), 1, false, (float*)&mat.second());//static_cast<float*>(mat.second()));
-			}
-		}
+		//void update_matricies_uniforms() {
+		//	for (auto mat : matrix_providers) {
+		//		program_sptr->uniform_matrix4fv(program_sptr->unifrom_location(mat.first), 1, false, (float*)&mat.second());//static_cast<float*>(mat.second()));
+		//	}
+		//}
 	public:
-		verticies_renderer(std::shared_ptr<gl::program> program, gl::primitive_type pt)
-			:renderer(program), pt{ pt }, vao_{ std::make_shared<gl::vertex_array>() } {}
+		verticies_renderer(std::shared_ptr<gl::program> program)
+			:shader_renderer(program), vertex_array{ std::make_shared<gl::vertex_array>() } {}
 
-		verticies_renderer(gl::program&& program, gl::primitive_type pt)
-			:renderer(std::move(program)),
-			vao_{ std::make_shared<gl::vertex_array>() }, pt{ pt } {}
+		verticies_renderer(gl::program&& program)
+			:shader_renderer(std::move(program)),
+			vertex_array{ std::make_shared<gl::vertex_array>() } {}
 
-		verticies_renderer(gl::program&& program, gl::vertex_array&& vao, gl::primitive_type pt)
-			:renderer(std::move(program)),
-			vao_{ std::make_shared<gl::vertex_array>(std::move(vao)) }, pt{ pt } {}
+		verticies_renderer(gl::program&& program, gl::vertex_array&& vao)
+			:shader_renderer(std::move(program)),
+			vertex_array{ std::make_shared<gl::vertex_array>(std::move(vao)) } {}
 
-		std::shared_ptr<gl::vertex_array> vao() {
-			return vao_;
+		std::shared_ptr<gl::vertex_array> get_vertex_array() {
+			return vertex_array;
 		}
 
-		template<class MatrixProvider>
-		void matrix(std::string name, MatrixProvider matrix_provider) {
-			matrix_providers[name] = matrix_provider;
-		}
-
-		//template<class... Types>
-		//void vertex_data(vertex_data<Types...> data) {
+		//template<class MatrixProvider>
+		//void matrix(std::string name, MatrixProvider matrix_provider) {
+		//	matrix_providers[name] = matrix_provider;
 		//}
 
-		template <class C>
+		/*template <class C>
 		void vertex_attrib_data(gl::vertex_attribute::location location, gl::vertex_attribute::size size,
 			gl::vertex_attribute::normalized normalized, const C& container) {
 			vertex_attrib_data(location, size, normalized, container.begin(), container.end());
@@ -131,7 +130,7 @@ namespace gfx {
 		void render(gl::primitive_type pt, unsigned start, size_t count, gl::vertex_array& vao) {
 			update_matricies_uniforms();
 			gl::draw_arrays(pt, start, count, program, vao);
-		}
+		}*/
 	};
 
 	/*class textured_verticies_renderer : public verticies_renderer {

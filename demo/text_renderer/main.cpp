@@ -17,7 +17,7 @@ int main() {
 	freetype::face* face = lib.face_from_istream(ifstream{ "C:/Windows/Fonts/comic.ttf", std::ios::binary });
 	face->set_char_size(64 * 50, 0, 0, 0);
 
-	glfw::window window{ glfw::create_window(800, 600, "Test", {window::opengl_debug_context(true)}) };
+	glfw::window window{ glfw::create_window(800, 600, "Test", {window::hints::opengl_debug_context(true)}) };
 
 	window.make_context_current();
 
@@ -58,16 +58,14 @@ void main() {
 		)
 	};
 
-	tr.matrix("u_mat", []() {
-		return glm::translate(glm::ortho(-400.0, 400.0, -300.0, 300.0), {-400.0, 200.0, 0});
-	});
-
 	gl::clear_color(0, 0, 0, 1);
 
 	while (!window.should_close())
 	{
-		clear({ color_buffer });
+		clear(clear_buffer::color);
 
+		tr.get_program()->uniform_matrix4f(tr.get_program()->unifrom_location("u_mat"),
+			(float*)&glm::translate(glm::ortho(-400.0f, 400.0f, -300.0f, 300.0f), { -400.0, 200.0, 0 }));
 		tr.render();
 
 		window.swap_buffers();

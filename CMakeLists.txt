@@ -91,3 +91,15 @@ target_link_libraries(demo-gui utility-heap)
 include_directories(libs/include/ src/)
 
 source_group("Files" FILES ${GUI_FILES})
+
+# pro player
+file(GLOB_RECURSE PRO_PLAYER_FILES
+	./demo/proplayer/*.cpp
+	./demo/proplayer/*.hpp)
+	
+add_executable(demo-pro-player ${PRO_PLAYER_FILES})
+set_property(TARGET demo-pro-player PROPERTY CXX_STANDARD 17)
+target_link_libraries(demo-pro-player utility-heap)
+include_directories(libs/include/ src/)
+
+source_group("Files" FILES ${PRO_PLAYER_FILES})

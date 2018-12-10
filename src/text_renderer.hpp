@@ -14,16 +14,21 @@ namespace gfx {
 		gfx::fixed_texture_atlas tex_atlas;
 		std::string text;
 		std::vector<int> textures_array_texture_units;
+		std::vector<gl::array_buffer> buffers;
+		int width = 0;
 
 		static int calculate_max_size(freetype::face& face) {
 			freetype::bbox global_box{ face.get_bbox() };
-			unsigned side_size = std::max(global_box.x_max - global_box.x_min, global_box.y_max - global_box.x_min);
-			return ceil(side_size / 64);
+			unsigned side_size = std::max(global_box.x_max - global_box.x_min, global_box.y_max - global_box.y_min);
+			return ceil(side_size / 64.0);
 		}
 	public:
+		//text_renderer(std::string str, freetype::face& face, gl::program& program)
+		//	:text_renderer(str, face, std::make_shared{program}) {}
+
 
 		text_renderer(std::string str, freetype::face& face, std::shared_ptr<gl::program> program)
-			:verticies_renderer(program, gl::primitive_type::triangles), text{ str }, tex_atlas{calculate_max_size(face), 30} {
+			:verticies_renderer(program), text{ str }, tex_atlas{ calculate_max_size(face), 30 } {
 
 			std::vector<float> positions;
 			std::vector<float> uvs;
@@ -32,6 +37,9 @@ namespace gfx {
 			long penX = 0;
 			long penY = 0;
 			unsigned last_index = 0;
+
+			float scaleX = 1.0 / 64.0;
+			float scaleY = 1.0 / 64.0;
 
 			for (auto begin = str.begin(); begin != str.end();) {
 				uint32_t code_point = utf8::next(begin, str.end());
@@ -46,8 +54,6 @@ namespace gfx {
 				auto bitmap = glyph.get_bitmap();
 
 				freetype::glyph_slot::metrics metrics = glyph.get_metrics();
-				float scaleX = 1.0 / 64.0;
-				float scaleY = 1.0 / 64.0;
 
 				float left = (penX + metrics.horizontal_bearing_x()) * scaleX;
 				float right = (penX + metrics.horizontal_bearing_x() + metrics.width()) * scaleX;
@@ -75,7 +81,7 @@ namespace gfx {
 							data[(x + y * w) * 4] = c;
 							data[(x + y * w) * 4 + 1] = c;
 							data[(x + y * w) * 4 + 2] = c;
-							data[(x + y * w) * 4 + 3] = 1;
+							data[(x + y * w) * 4 + 3] = c;
 						}
 					}
 					if (data.size() == 0) {
@@ -105,16 +111,25 @@ namespace gfx {
 
 				penX += metrics.horizontal_advance();
 			}
+			width = penX * scaleX;
 
-			vertex_attrib_data(program->attrib_location("a_position"), gl::vertex_attribute::size{ 2 }, gl::vertex_attribute::normalized{ false }, positions);
-			vertex_attrib_data(program->attrib_location("a_uv"), gl::vertex_attribute::size{ 2 }, gl::vertex_attribute::normalized{ false }, uvs);
+			buffers.push_back(gl::array_buffer(positions));
+			vertex_array->attrib_pointer<float>(program->attrib_location("a_position"), gl::vertex_attribute::size{ 2 }, buffers.back());
+			vertex_array->enable_attrib_array(program->attrib_location("a_position"));
+
+			buffers.push_back(gl::array_buffer(uvs));
+			vertex_array->attrib_pointer<float>(program->attrib_location("a_uv"), gl::vertex_attribute::size{ 2 }, buffers.back());
+			vertex_array->enable_attrib_array(program->attrib_location("a_uv"));
 		}
 
 		void render() override {
-			update_matricies_uniforms();
 			gl::active_texture(tex_atlas, 0);
 			program->uniform_1i(program->unifrom_location("u_atlas"), 0);
-			draw_arrays(pt, 0, 6 * text.length(), program, vao_);
+			program->draw_arrays(gl::primitive_type::triangles, 0, 6 * text.length(), *vertex_array);
+		}
+
+		int get_width() {
+			return width;
 		}
 	};
 }
