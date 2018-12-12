@@ -33,17 +33,20 @@ namespace gl {
 		friend texture_2d;
 	protected:
 		internal::buffer_target target;
+		
+		void bind() override {
+			internal::bind_buffer(target, name);
+		}
 
 		buffer(buffer&& r) :with_name{ std::move(r) }, target{ r.target } { }
 
 		buffer(internal::buffer_target tar) : target{ tar } {
 			internal::gen_buffers(1, &name);
-			internal::bind_buffer(tar, name);
+			bind();
 		}
 
 		buffer(unsigned name, internal::buffer_target tar) : with_name{ name }, target{ tar } {}
 
-		void bind() override { internal::bind_buffer(target, name); }
 	public:
 		~buffer() {
 			if (name != invalid_name) {

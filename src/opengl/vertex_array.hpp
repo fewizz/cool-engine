@@ -2,6 +2,7 @@
 #include "bindable.hpp"
 #include "with_name.hpp"
 #include "internal.hpp"
+#include "primitive.hpp"
 
 namespace gl {
 	namespace internal {
@@ -22,25 +23,19 @@ namespace gl {
 		typedef bool normalized;
 	}
 
-	enum primitive_type :unsigned {
-		lines = 1,
-		line_loop,
-		line_strip,
-		triangles,
-		triangle_strip,
-		triangle_fan
-	};
-
 	extern class buffer;
 	extern class array_buffer;
+	extern class program;
 
 	class vertex_array : public bindable, with_name {
+		friend class program;
+
 		void bind() override { internal::bind_vertex_array(name); };
 	public:
 		~vertex_array() {
 			if (name != invalid_name) {
 				internal::delete_vertex_arrays(1, &name);
-				name = invalid_name;
+				invalidate_name();
 			}
 		}
 
