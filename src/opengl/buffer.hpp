@@ -1,6 +1,7 @@
 #pragma once
 #include "with_name.hpp"
 #include "bindable.hpp"
+#include "internal.hpp"
 
 namespace gl {
 	namespace internal {
@@ -48,12 +49,7 @@ namespace gl {
 		buffer(unsigned name, internal::buffer_target tar) : with_name{ name }, target{ tar } {}
 
 	public:
-		~buffer() {
-			if (name != invalid_name) {
-				internal::delete_buffers(1, &name);
-				invalidate_name();
-			}
-		}
+		~buffer();
 
 		size_t size() {
 			bind();
@@ -82,7 +78,7 @@ namespace gl {
 		template<class Container>
 		void sub_data(unsigned offset, Container container) {
 			bind();
-			internal::sub_data(target, offset, sizeof(Container::value_type) * container.size(), container.data());
+			internal::buffer_sub_data(target, offset, sizeof(Container::value_type) * container.size(), container.data());
 		}
 	};
 

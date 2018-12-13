@@ -9,14 +9,14 @@ namespace gl {
 		void shader_source(unsigned shader, unsigned count, const char* const* string, const int* length);
 		void compile_shader(unsigned shader);
 
-		enum shader_type {
+		enum shader_type : unsigned {
 			compute_shader = 0x91B9,
 			vertex_shader = 0x8B31,
 			fragment_shader = 0x8B30
 		};
 	}
 
-	extern class program;
+	class program;
 
 	class shader :public with_name {
 		friend program;
@@ -33,21 +33,16 @@ namespace gl {
 		shader(shader&) = delete;
 		shader& operator=(shader&) = delete;
 		shader(shader&& s) :with_name{ std::move(s) } { type = s.type; }
+
 		~shader() {
 			if (name != invalid_name) {
-				gl::internal::delete_shader(name);
+				internal::delete_shader(name);
 				invalidate_name();
 			}
 		}
 
-		void source(std::string src) {
-			const char* c_str = src.c_str();
-			gl::internal::shader_source(name, 1, &c_str, nullptr);
-		}
-
-		void compile() {
-			gl::internal::compile_shader(name);
-		}
+		void source(std::string src);
+		void compile();
 	};
 	class vertex_shader : public shader {
 	public:

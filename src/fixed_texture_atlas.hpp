@@ -1,5 +1,5 @@
 #pragma once
-#include "opengl/gl.hpp"
+#include "opengl/texture.hpp"
 #include <vector>
 #include <cmath>
 #include <utility>
@@ -29,7 +29,7 @@ namespace gfx {
 
 		fixed_texture_atlas(int texture_size, int textures_per_side) : texture_size{ texture_size }, textures_per_side{textures_per_side} {
 			int size = texture_size * textures_per_side;
-			image<uint8_t>(gl::internal_format::rgba8, size, size, gl::pixel_format::rgba, (uint8_t*)nullptr);
+			image<uint8_t>(gl::internal_format::rgba8, 0, size, size, gl::pixel_format::rgba, (uint8_t*)nullptr);
 		}
 
 		/* Returns right top point */

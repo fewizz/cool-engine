@@ -1,23 +1,21 @@
 #pragma once
 #include <memory>
+#include "internal.hpp"
 
 namespace gl {
 	class with_name;
 
 	namespace internal {
-		unsigned get_name(with_name& obj) {
-			return obj.name;
-		}
+		unsigned get_name(with_name& obj);
 	}
 
 	class with_name {
-		template<class T>
-		friend std::shared_ptr<T> view(T&);
-
-		template<class T>
-		friend std::shared_ptr<T> view(unsigned);
-
 		friend unsigned internal::get_name(with_name& obj);
+		template<class T>
+		friend std::shared_ptr<T> internal::view(T&);
+
+		template<class T>
+		friend std::shared_ptr<T> internal::view(unsigned);
 
 	protected:
 		static constexpr unsigned invalid_name = std::numeric_limits<unsigned>::max();

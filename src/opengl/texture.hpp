@@ -89,8 +89,8 @@ namespace gl {
 		}
 
 		template<class Container>
-		void image(internal_format if_, unsigned w, unsigned h, pixel_format pf, Container& data) {
-			image(if_, w, h, pf, &*data.begin());
+		void image(internal_format internalformat, unsigned w, unsigned h, pixel_format format, Container& data) {
+			image(internalformat, w, h, format, &*data.begin());
 		}
 
 		template<class T>
@@ -100,8 +100,5 @@ namespace gl {
 		}
 	};
 
-	void active_texture(texture& tex, unsigned index) {
-		tex.bind();
-		internal::active_texture(0x84C0 + index);
-	}
+	void active_texture(texture& tex, unsigned index);
 }

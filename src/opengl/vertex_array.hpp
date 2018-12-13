@@ -1,6 +1,7 @@
 #pragma once
 #include "bindable.hpp"
 #include "with_name.hpp"
+#include "buffer.hpp"
 #include "internal.hpp"
 #include "primitive.hpp"
 
@@ -23,21 +24,14 @@ namespace gl {
 		typedef bool normalized;
 	}
 
-	extern class buffer;
-	extern class array_buffer;
-	extern class program;
+	class program;
 
 	class vertex_array : public bindable, with_name {
 		friend class program;
 
 		void bind() override { internal::bind_vertex_array(name); };
 	public:
-		~vertex_array() {
-			if (name != invalid_name) {
-				internal::delete_vertex_arrays(1, &name);
-				invalidate_name();
-			}
-		}
+		~vertex_array();
 
 		vertex_array() {
 			internal::gen_vertex_arrays(1, &name);
@@ -76,14 +70,7 @@ namespace gl {
 			return size;
 		}
 
-		void bind_vertex_buffer(unsigned binding_index, buffer& buffer) {
-			bind();
-			internal::bind_vertex_buffer(binding_index, ((with_name&)buffer).name, 0, 0);
-		}
-
-		void enable_attrib_array(unsigned index) {
-			bind();
-			internal::enable_vertex_attrib_array(index);
-		}
+		void bind_vertex_buffer(unsigned binding_index, buffer& buffer);
+		void enable_attrib_array(unsigned index);
 	};
 }

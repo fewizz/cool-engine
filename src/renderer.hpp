@@ -3,10 +3,11 @@
 #include <cmath>
 #include <iterator>
 #include <memory>
-#include "opengl/gl.hpp"
 #include <functional>
 #include <array>
-#include <glm/mat4x4.hpp>
+#include "glm/mat4x4.hpp"
+#include "opengl/program.hpp"
+#include "opengl/vertex_array.hpp"
 
 namespace gfx {
 
