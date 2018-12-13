@@ -24,6 +24,7 @@ namespace gl {
 
 		void uniform_1i(int location, int value);
 		void uniform_1ui(int location, unsigned value);
+		void uniform_4f(int location, float f1, float f2, float f3, float f4);
 		void uniform_matrix_4fv(int location, unsigned count, bool transpose, const float* value);
 	}
 
@@ -132,6 +133,16 @@ namespace gl {
 		void uniform<unsigned>(unsigned location, unsigned value) {
 			use();
 			internal::uniform_1ui(location, value);
+		}
+
+		template<class T, int N>
+		void uniform(unsigned location, void* data);
+
+		template<>
+		void uniform<float, 4>(unsigned location, void* data) {
+			use();
+			float* fdata = (float*)data;
+			internal::uniform_4f(location, fdata[0], fdata[1], fdata[2], fdata[3]);
 		}
 
 		template<class RAI>

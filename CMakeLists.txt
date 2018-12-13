@@ -38,6 +38,9 @@ find_package(OpenGL REQUIRED)
 
 include_directories(libs/include/ src/ ${OPENGL_INCLUDE_DIR} ${OPENAL_INCLUDE_DIR})
 
+add_library(lodepng STATIC libs/include/lodepng.h libs/src/lodepng.cpp)
+set_property(TARGET lodepng PROPERTY CXX_STANDARD 17)
+
 target_link_libraries(utility-heap ${LIB_DIR}/glfw3.lib)
 target_link_libraries(utility-heap ${LIB_DIR}/glew32s.lib)
 target_link_libraries(utility-heap ${OPENGL_LIBRARIES})
@@ -100,6 +103,7 @@ file(GLOB_RECURSE PRO_PLAYER_FILES
 add_executable(demo-pro-player ${PRO_PLAYER_FILES})
 set_property(TARGET demo-pro-player PROPERTY CXX_STANDARD 17)
 target_link_libraries(demo-pro-player utility-heap)
+target_link_libraries(demo-pro-player lodepng)
 include_directories(libs/include/ src/)
 
 source_group("Files" FILES ${PRO_PLAYER_FILES})

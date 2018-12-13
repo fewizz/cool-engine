@@ -83,6 +83,10 @@ void gl::internal::uniform_1ui(int location, unsigned value) {
 	glUniform1ui(location, value);
 }
 
+void gl::internal::uniform_4f(int location, float f1, float f2, float f3, float f4) {
+	glUniform4f(location, f1, f2, f3, f4);
+}
+
 void gl::internal::uniform_matrix_4fv(int location, unsigned count, bool transpose, const float* value) {
 	glUniformMatrix4fv(location, count, transpose, value);
 }

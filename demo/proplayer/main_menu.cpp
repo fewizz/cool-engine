@@ -68,12 +68,13 @@ main_menu_button::main_menu_button(float x, float y, float w, float h, freetype:
 				#version 420 core
 						
 				uniform sampler2D u_atlas;
+				uniform vec4 u_color;
 						
 				in vec2 uv_vs;
 				out vec4 color;
 						
 				void main() {
-					color = texture(u_atlas, uv_vs);
+					color = texture(u_atlas, uv_vs) * u_color;
 				}
 			)"}
 			}
@@ -89,8 +90,13 @@ void main_menu_button::render() {
 	rectangle_program->uniform_mat<4, 4, float>(rectangle_program->get_unifrom_location("u_mat"), &mat);
 	rectangle_renderer->render();
 
-	mat = translate(mat, { x, y, 0 });
-	mat = translate(mat, { (w - text_renderer->get_width()) / 2, 10, 0 });
+	mat = translate(mat, { x + (w - text_renderer->get_width()) / 2, y + 15, 0 });
 	text_program->uniform_mat<4, 4, float>(text_program->get_unifrom_location("u_mat"), &mat);
+	text_program->uniform<float, 4>(text_program->get_unifrom_location("u_color"), &glm::vec4(0, 0, 0, 1));
+	text_renderer->render();
+
+	mat = translate(mat, { 2, 2, 0 });
+	text_program->uniform_mat<4, 4, float>(text_program->get_unifrom_location("u_mat"), &mat);
+	text_program->uniform<float, 4>(text_program->get_unifrom_location("u_color"), &glm::vec4(1, 1, 1, 1));
 	text_renderer->render();
 }

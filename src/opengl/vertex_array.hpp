@@ -55,14 +55,14 @@ namespace gl {
 		}
 
 		template<class T>
-		void attrib_pointer(vertex_attribute::location location, vertex_attribute::size size, buffer& buff, vertex_attribute::normalized normalized = false) {
+		void attrib_pointer(vertex_attribute::location location, vertex_attribute::size size, array_buffer& buff, vertex_attribute::normalized normalized = false) {
 			bind();
 			buff.bind();
 			internal::vertex_attrib_pointer(location, size, internal::type_token<T>(), normalized, 0, nullptr);
 		}
 
 		template<class T>
-		void attrib_i_pointer(vertex_attribute::location location, vertex_attribute::size size, buffer& buff) {
+		void attrib_i_pointer(vertex_attribute::location location, vertex_attribute::size size, array_buffer& buff) {
 			bind();
 			buff.bind();
 			internal::vertex_attrib_i_pointer(location, size, internal::type_token<T>(), 0, nullptr);

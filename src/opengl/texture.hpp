@@ -60,6 +60,7 @@ namespace gl {
 		}
 
 		texture(texture&& tex) :with_name{ std::move(tex) }, target{ tex.target }{}
+
 		texture(internal::texture_target target) : target{ target } {
 			internal::gen_textures(1, &name);
 			bind();
@@ -100,6 +101,7 @@ namespace gl {
 	class texture_2d : public texture {
 	public:
 		texture_2d() : texture { internal::texture_target::texture_2d } {}
+		texture_2d(texture_2d&& t) : texture(std::move(t)) {}
 
 		unsigned height() {
 			return get_level_parameter_i(0x1001);
@@ -113,7 +115,7 @@ namespace gl {
 
 		template<class Container>
 		void image(internal_format internalformat, unsigned w, unsigned h, pixel_format format, Container& data) {
-			image(internalformat, w, h, format, &*data.begin());
+			image<Container::value_type>(internalformat, 0, w, h, format, &*data.begin());
 		}
 
 		template<class T>

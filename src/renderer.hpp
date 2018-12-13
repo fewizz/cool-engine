@@ -8,6 +8,7 @@
 #include "glm/mat4x4.hpp"
 #include "opengl/program.hpp"
 #include "opengl/vertex_array.hpp"
+#include "opengl/texture.hpp"
 
 namespace gfx {
 
@@ -135,12 +136,11 @@ namespace gfx {
 	};
 
 	class rectangle_renderer : public verticies_renderer {
-		//float x, y, w, h;
 		gl::array_buffer positions;
 
 	public:
 		rectangle_renderer(float x, float y, float w, float h, std::shared_ptr<gl::program> program, gl::buffer_usage usage = gl::buffer_usage::static_draw)
-			:verticies_renderer( program )//, x{ x }, y{ y }, w{ h }, h{ h }
+			:verticies_renderer( program )
 		{
 			positions.data(std::vector<float>{
 				x, y,
@@ -173,6 +173,39 @@ namespace gfx {
 
 		void render() override {
 			program->draw_arrays(gl::primitive_type::triangle_strip, 0, 4, *vertex_array);
+		}
+	};
+
+	class textured_rectangle_renderer : public rectangle_renderer {
+		std::shared_ptr<gl::texture_2d> texture_;
+		gl::array_buffer uvs;
+	public:
+		using rectangle_renderer::rectangle_renderer;
+
+		void texture(std::shared_ptr<gl::texture_2d> texture) {
+			texture_ = texture;
+		}
+
+		void texture(gl::texture_2d&& texture, int xo, int yo, int w, int h) {
+			float tw = texture.width();
+			float th = texture.height();
+
+			uvs.data(std::vector<float> {
+				xo / tw, (yo + h) / th,
+				(xo + w) / tw, (yo + h) / th,
+				xo / tw, yo / th,
+				(xo + w) / tw, yo / th
+			});
+			gl::vertex_attribute::location uv_loc = program->get_attrib_location("a_uv");
+			vertex_array->attrib_pointer<float>(uv_loc, 2, uvs);
+			vertex_array->enable_attrib_array(uv_loc);
+			texture_ = std::make_shared<gl::texture_2d>(std::move(texture));
+		}
+
+		void render() override {
+			gl::active_texture(*texture_, 0);
+			program->uniform<int>(program->get_unifrom_location("u_texture"), 0);
+			rectangle_renderer::render();
 		}
 	};
 
