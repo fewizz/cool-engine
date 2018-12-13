@@ -7,7 +7,9 @@ namespace gl {
 		void viewport(int x, int y, unsigned w, unsigned h);
 	}
 
-	void clear_color(float r, float g, float b, float a);
+	inline void clear_color(float r, float g, float b, float a) {
+		internal::clear_color(r, g, b, a);
+	}
 
 	enum class clear_buffer : unsigned {
 		color = 0x00004000,
@@ -20,5 +22,7 @@ namespace gl {
 		internal::clear((unsigned)(masks | ...));
 	}
 
-	void viewport(int x, int y, unsigned w, unsigned h);
+	inline void viewport(int x, int y, unsigned w, unsigned h) {
+		internal::viewport(x, y, w, h);
+	}
 }

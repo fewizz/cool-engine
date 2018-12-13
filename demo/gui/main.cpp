@@ -1,7 +1,12 @@
-#include "opengl/gl.hpp"
+#include "opengl/context.hpp"
+#include "opengl/debug.hpp"
+#include "opengl/shader.hpp"
+#include "opengl/core.hpp"
+#include "opengl/program.hpp"
 #include "gui.hpp"
 #include "renderer.hpp"
 #include <memory>
+#include <iostream>
 #include "glm/mat4x4.hpp"
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/ext/matrix_clip_space.hpp"
@@ -58,11 +63,11 @@ int main() {
 			}
 
 			void render() override {
-				vertex_attribute::location pos_loc = program->attrib_location("a_pos");
+				vertex_attribute::location pos_loc = program->get_attrib_location("a_pos");
 
 				vertex_array->attrib_pointer<float>(pos_loc, 2, vbo);
 				vertex_array->enable_attrib_array(pos_loc);
-				program->uniform_matrix4fv(program->unifrom_location("u_mat"), 1, false, (float*)&glm::translate(glm::ortho(0.0f, (float)w, -h / 2.0f, h / 2.0f), {x, y, 0}));
+				program->uniform_mat<4, 4, float>(program->get_unifrom_location("u_mat"), 1, false, &glm::translate(glm::ortho(0.0f, (float)w, -h / 2.0f, h / 2.0f), {x, y, 0}));
 				program->draw_arrays(triangle_strip, 0, 6, *vertex_array);
 			}
 

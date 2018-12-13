@@ -41,8 +41,14 @@ namespace gl {
 			}
 		}
 
-		void source(std::string src);
-		void compile();
+		void source(std::string src) {
+			const char* c_str = src.c_str();
+			internal::shader_source(name, 1, &c_str, nullptr);
+		}
+
+		void compile() {
+			internal::compile_shader(name);
+		}
 	};
 	class vertex_shader : public shader {
 	public:

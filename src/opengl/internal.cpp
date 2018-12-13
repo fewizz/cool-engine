@@ -163,6 +163,10 @@ void gl::internal::delete_textures(unsigned n, unsigned* textures) {
 	glDeleteTextures(n, textures);
 }
 
+void gl::internal::texture_parameteri(unsigned texture, unsigned pname, int param) {
+	glTextureParameteri(texture, pname, param);
+}
+
 void gl::internal::get_texture_level_parameteriv(unsigned texture, int level, unsigned pname, int* params) {
 	glGetTextureLevelParameteriv(texture, level, pname, params);
 }

@@ -38,4 +38,10 @@ namespace gl {
 
 		unsigned name{ invalid_name };
 	};
+
+	namespace internal {
+		inline unsigned get_name(with_name& obj) {
+			return obj.name;
+		}
+	}
 }

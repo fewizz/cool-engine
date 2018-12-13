@@ -2,11 +2,11 @@
 #include "with_name.hpp"
 #include "primitive.hpp"
 #include "bindable.hpp"
+#include "vertex_array.hpp"
 #include <string>
 
 namespace gl {
 	class shader;
-	class vertex_array;
 
 	namespace internal {
 		extern void bind_vertex_array(unsigned array);
@@ -107,7 +107,7 @@ namespace gl {
 
 		void draw_arrays(primitive_type pt, unsigned start, unsigned count, vertex_array& vao) {
 			use();
-			internal::bind_vertex_array(((with_name&)vao).name);
+			internal::bind_vertex_array(vao.name);
 			internal::draw_arrays(pt, start, count);
 		}
 
@@ -119,12 +119,17 @@ namespace gl {
 			return internal::get_uniform_location(name, unifrom_name.c_str());
 		}
 		
-		void uniform(unsigned location, int value) {
+		template<class T>
+		void uniform(unsigned location, T);
+
+		template<>
+		void uniform<int>(unsigned location, int value) {
 			use();
 			internal::uniform_1i(location, value);
 		}
 
-		void uniform(unsigned location, unsigned value) {
+		template<>
+		void uniform<unsigned>(unsigned location, unsigned value) {
 			use();
 			internal::uniform_1ui(location, value);
 		}

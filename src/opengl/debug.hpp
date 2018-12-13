@@ -3,14 +3,6 @@
 #include <string>
 
 namespace gl {
-	namespace internal {
-		typedef void (debug_callback)(unsigned source, unsigned type, unsigned id,
-			unsigned severity, unsigned length, const char *message,
-			const void *user_param);
-
-		void debug_message_callback(debug_callback, const void *user_param);
-	}
-
 	enum message_source {
 	};
 
@@ -28,6 +20,14 @@ namespace gl {
 
 	enum message_severity {
 	};
+
+	namespace internal {
+		typedef void (debug_callback)(message_source source, message_type type, unsigned id,
+			message_severity severity, unsigned length, const char *message,
+			const void *user_param);
+
+		void debug_message_callback(debug_callback, const void *user_param);
+	}
 
 	void debug_message_callback(internal::debug_callback callback, const void *user_param = nullptr);
 	void debug_message_callback(void(callback)(std::string message), const void *user_param = nullptr);

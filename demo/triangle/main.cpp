@@ -15,8 +15,8 @@ int h = 600;
 int main() {
 	glfw::window window = glfw::create_window(w, h, "test", { glfw::window::hints::opengl_debug_context{true} });
 	window.make_context_current();
-	//gl::context c{ gl::wrap_context() };
-	gl::internal::init();
+	gl::context c{ gl::wrap_context() };
+	//gl::internal::init();
 
 	class rend : public gfx::verticies_renderer {
 		gl::array_buffer vbo;

@@ -10,5 +10,8 @@ namespace gl {
 	public:
 	};
 
-	context wrap_context();
+	inline context wrap_context() {
+		gl::internal::init();
+		return {};
+	}
 }

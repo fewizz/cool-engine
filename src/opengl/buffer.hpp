@@ -49,7 +49,12 @@ namespace gl {
 		buffer(unsigned name, internal::buffer_target tar) : with_name{ name }, target{ tar } {}
 
 	public:
-		~buffer();
+		~buffer() {
+			if (name != invalid_name) {
+				gl::internal::delete_buffers(1, &name);
+				invalidate_name();
+			}
+		}
 
 		size_t size() {
 			bind();
@@ -67,7 +72,7 @@ namespace gl {
 		template<class Container>
 		void data(Container container, buffer_usage usage = buffer_usage::static_draw) {
 			bind();
-			gl::internal::buffer_data(sizeof(Container::value_type)*container.size(), container.data(), usage);
+			gl::internal::buffer_data(target, sizeof(Container::value_type)*container.size(), container.data(), usage);
 		}
 
 		void data(size_t size, buffer_usage usage = buffer_usage::static_draw) {

@@ -8,6 +8,7 @@
 #include "fixed_texture_atlas.hpp"
 #include <algorithm>
 #include <cmath>
+#include <map>
 
 namespace gfx {
 	class text_renderer : public verticies_renderer {
@@ -29,6 +30,8 @@ namespace gfx {
 
 		text_renderer(std::string str, freetype::face& face, std::shared_ptr<gl::program> program)
 			:verticies_renderer(program), text{ str }, tex_atlas{ calculate_max_size(face), 30 } {
+			tex_atlas.mag_filter(gl::mag_filter::nearest);
+			tex_atlas.min_filter(gl::min_filter::nearest);
 
 			std::vector<float> positions;
 			std::vector<float> uvs;
@@ -114,17 +117,17 @@ namespace gfx {
 			width = penX * scaleX;
 
 			buffers.push_back(gl::array_buffer(positions));
-			vertex_array->attrib_pointer<float>(program->attrib_location("a_position"), gl::vertex_attribute::size{ 2 }, buffers.back());
-			vertex_array->enable_attrib_array(program->attrib_location("a_position"));
+			vertex_array->attrib_pointer<float>(program->get_attrib_location("a_position"), gl::vertex_attribute::size{ 2 }, buffers.back());
+			vertex_array->enable_attrib_array(program->get_attrib_location("a_position"));
 
 			buffers.push_back(gl::array_buffer(uvs));
-			vertex_array->attrib_pointer<float>(program->attrib_location("a_uv"), gl::vertex_attribute::size{ 2 }, buffers.back());
-			vertex_array->enable_attrib_array(program->attrib_location("a_uv"));
+			vertex_array->attrib_pointer<float>(program->get_attrib_location("a_uv"), gl::vertex_attribute::size{ 2 }, buffers.back());
+			vertex_array->enable_attrib_array(program->get_attrib_location("a_uv"));
 		}
 
 		void render() override {
 			gl::active_texture(tex_atlas, 0);
-			program->uniform_1i(program->unifrom_location("u_atlas"), 0);
+			program->uniform<int>(program->get_unifrom_location("u_atlas"), 0);
 			program->draw_arrays(gl::primitive_type::triangles, 0, 6 * text.length(), *vertex_array);
 		}
 

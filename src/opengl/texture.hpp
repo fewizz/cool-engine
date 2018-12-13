@@ -8,6 +8,7 @@ namespace gl {
 		void bind_texture(unsigned target, unsigned texture);
 		void delete_textures(unsigned n, unsigned* textures);
 
+		void texture_parameteri(unsigned texture, unsigned pname, int param);
 		void get_texture_level_parameteriv(unsigned texture, int level, unsigned pname, int* params);
 		void tex_image_2d(unsigned target, int level, int internalformat,
 			unsigned width, unsigned height, int border, unsigned format, unsigned type, const void* data);
@@ -38,8 +39,17 @@ namespace gl {
 		repeat = 0x2901
 	};
 
-	class texture : public bindable, with_name {
+	enum class mag_filter {
+		nearest = 0x2600,
+		linear
+	};
 
+	enum class min_filter {
+		nearest = 0x2600,
+		linear
+	};
+
+	class texture : public bindable, with_name {
 		friend void active_texture(texture& tex, unsigned index);
 
 	protected:
@@ -61,7 +71,12 @@ namespace gl {
 			return result;
 		}
 
+		void parameter(unsigned pname, int value) {
+			gl::internal::texture_parameteri(name, pname, value);
+		}
+
 	public:
+
 		~texture() {
 			if (name != invalid_name) {
 				internal::delete_textures(1, &name);
@@ -71,6 +86,14 @@ namespace gl {
 
 		unsigned width() {
 			return get_level_parameter_i(0x1000);
+		}
+
+		void mag_filter(mag_filter filter) {
+			parameter(0x2800, (unsigned)filter);
+		}
+
+		void min_filter(min_filter filter) {
+			parameter(0x2801, (unsigned)filter);
 		}
 	};
 
@@ -96,9 +119,12 @@ namespace gl {
 		template<class T>
 		void sub_image(int xoffset, int yoffset, int width, int height, pixel_format format, T* data) {
 			bind();
-			gl::internal::sub_image_2d(target, 0, xoffset, yoffset, width, height, format, internal::type_token<T>(), data);
+			gl::internal::tex_sub_image_2d(target, 0, xoffset, yoffset, width, height, format, internal::type_token<T>(), data);
 		}
 	};
 
-	void active_texture(texture& tex, unsigned index);
+	inline void active_texture(texture& tex, unsigned index) {
+		tex.bind();
+		internal::active_texture(0x84C0 + index);
+	}
 }

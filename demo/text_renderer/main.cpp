@@ -5,6 +5,11 @@
 #include "glm/ext/matrix_transform.hpp"
 #include "glfw/glfw.hpp"
 #include "freetype/library.hpp"
+#include "opengl/context.hpp"
+#include "opengl/debug.hpp"
+#include "opengl/shader.hpp"
+#include "opengl/core.hpp"
+#include <iostream>
 
 using namespace std;
 using namespace gl;
@@ -22,8 +27,9 @@ int main() {
 	window.make_context_current();
 
 	gl::context glc{wrap_context()};
-	debug_message_callback([](message_source source, message_type type, unsigned id, message_severity severity, unsigned length,
-		const char* message, const void* userParam) {
+	debug_message_callback([](message_source source, message_type type, unsigned id,
+		message_severity severity, unsigned length, const char *message,
+		const void *user_param) {
 		std::cout << message << "\n";
 	});
 
@@ -64,8 +70,8 @@ void main() {
 	{
 		clear(clear_buffer::color);
 
-		tr.get_program()->uniform_matrix4f(tr.get_program()->unifrom_location("u_mat"),
-			(float*)&glm::translate(glm::ortho(-400.0f, 400.0f, -300.0f, 300.0f), { -400.0, 200.0, 0 }));
+		tr.get_program()->uniform_mat<4, 4, float>(tr.get_program()->get_unifrom_location("u_mat"), 1, false,
+			&glm::translate(glm::ortho(-400.0f, 400.0f, -300.0f, 300.0f), { -400.0, 200.0, 0 }));
 		tr.render();
 
 		window.swap_buffers();
