@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <cmath>
 #include <map>
+#include "opengl/core.hpp"
 
 namespace gfx {
 	class text_renderer : public verticies_renderer {
@@ -16,12 +17,12 @@ namespace gfx {
 		std::string text;
 		std::vector<int> textures_array_texture_units;
 		std::vector<gl::array_buffer> buffers;
-		int width = 0;
+		float width = 0;
 
 		static int calculate_max_size(freetype::face& face) {
 			freetype::bbox global_box{ face.get_bbox() };
 			unsigned side_size = std::max(global_box.x_max - global_box.x_min, global_box.y_max - global_box.y_min);
-			return ceil(side_size / 64.0);
+			return (unsigned) ceil(side_size / 64.0);
 		}
 	public:
 		//text_renderer(std::string str, freetype::face& face, gl::program& program)
@@ -81,9 +82,9 @@ namespace gfx {
 					for (unsigned x = 0; x < w; x++) {
 						for (unsigned y = 0; y < h; y++) {
 							uint8_t c = bitmap.data<uint8_t>()[x + bitmap.pitch() * y];
-							data[(x + y * w) * 4] = c;
-							data[(x + y * w) * 4 + 1] = c;
-							data[(x + y * w) * 4 + 2] = c;
+							data[(x + y * w) * 4] = 0xFF;
+							data[(x + y * w) * 4 + 1] = 0xFF;
+							data[(x + y * w) * 4 + 2] = 0xFF;
 							data[(x + y * w) * 4 + 3] = c;
 						}
 					}
@@ -99,8 +100,8 @@ namespace gfx {
 				std::pair<unsigned, unsigned> p = char_uv[code_point];
 				float x = p.first / (float)tex_atlas.width();
 				float y = p.second / (float)tex_atlas.height();
-				float w = metrics.width() / 64.0 / (float)tex_atlas.width();
-				float h = metrics.height() / 64.0 / (float)tex_atlas.height();
+				float w = metrics.width() / 64.0f / (float)tex_atlas.width();
+				float h = metrics.height() / 64.0f / (float)tex_atlas.height();
 
 				uvs.insert(uvs.end(),
 					{
@@ -126,12 +127,14 @@ namespace gfx {
 		}
 
 		void render() override {
+			gl::enable_blending();
+			gl::blend_func(gl::blending_factor::src_alpha, gl::blending_factor::one_minus_src_alpha);
 			gl::active_texture(tex_atlas, 0);
 			program->uniform<int>(program->get_unifrom_location("u_atlas"), 0);
-			program->draw_arrays(gl::primitive_type::triangles, 0, 6 * text.length(), *vertex_array);
+			program->draw_arrays(gl::primitive_type::triangles, 0, 6 * (unsigned)text.length(), *vertex_array);
 		}
 
-		int get_width() {
+		float get_width() {
 			return width;
 		}
 	};

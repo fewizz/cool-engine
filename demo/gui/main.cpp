@@ -67,7 +67,7 @@ int main() {
 
 				vertex_array->attrib_pointer<float>(pos_loc, 2, vbo);
 				vertex_array->enable_attrib_array(pos_loc);
-				program->uniform_mat<4, 4, float>(program->get_unifrom_location("u_mat"), 1, false, &glm::translate(glm::ortho(0.0f, (float)w, -h / 2.0f, h / 2.0f), {x, y, 0}));
+				program->uniform_mat<4, 4, float>(program->get_unifrom_location("u_mat"), &glm::translate(glm::ortho(0.0f, (float)w, -h / 2.0f, h / 2.0f), {x, y, 0}));
 				program->draw_arrays(triangle_strip, 0, 6, *vertex_array);
 			}
 

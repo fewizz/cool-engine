@@ -5,6 +5,8 @@ namespace gl {
 		void clear(unsigned mask);
 		void clear_color(float r, float g, float b, float a);
 		void viewport(int x, int y, unsigned w, unsigned h);
+		void enable(unsigned name);
+		void blend_func(unsigned source, unsigned destination);
 	}
 
 	inline void clear_color(float r, float g, float b, float a) {
@@ -24,5 +26,18 @@ namespace gl {
 
 	inline void viewport(int x, int y, unsigned w, unsigned h) {
 		internal::viewport(x, y, w, h);
+	}
+
+	inline void enable_blending() {
+		internal::enable(0x0BE2);
+	}
+
+	enum blending_factor {
+		src_alpha = 0x0302,
+		one_minus_src_alpha
+	};
+
+	inline void blend_func(blending_factor src, blending_factor dest) {
+		internal::blend_func(src, dest);
 	}
 }

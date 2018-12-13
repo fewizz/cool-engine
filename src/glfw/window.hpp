@@ -36,6 +36,7 @@ namespace glfw {
 		bool should_close();
 		void swap_buffers();
 		std::pair<int, int> get_framebuffer_size();
+		void swap_interval(int interval);
 	};
 
 	window&& create_window(int width, int height, std::string title, std::vector<window::hints::hint> hints);

@@ -8,7 +8,8 @@ namespace gui {
 		virtual void render() = 0;
 	};
 
-	class square_view : public virtual view {
+	class rectangle_view : public virtual view {
+
 	};
 
 	class pressable {

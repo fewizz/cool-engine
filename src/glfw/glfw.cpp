@@ -40,6 +40,10 @@ std::pair<int, int> glfw::window::get_framebuffer_size() {
 	return { w, h };
 }
 
+void glfw::window::swap_interval(int interval) {
+	glfwSwapInterval(interval);
+}
+
 void glfw::poll_events() {
 	glfwPollEvents();
 }

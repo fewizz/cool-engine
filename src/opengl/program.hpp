@@ -158,11 +158,18 @@ namespace gl {
 
 		template<int C, int R, class T>
 		void uniform_mat(unsigned location, unsigned count, bool transpose, const void* values);
+		template<int C, int R, class T>
+		void uniform_mat(unsigned location, const void* values);
 
 		template<>
 		void uniform_mat<4, 4, float>(unsigned location, unsigned count, bool transpose, const void* values) {
 			use();
 			internal::uniform_matrix_4fv(location, count, transpose, (float*)values);
+		}
+
+		template<>
+		void uniform_mat<4, 4, float>(unsigned location, const void* values) {
+			uniform_mat<4, 4, float>(location, 1, false, values);
 		}
 
 

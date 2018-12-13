@@ -150,6 +150,14 @@ void gl::internal::viewport(int x, int y, unsigned w, unsigned h) {
 	glViewport(x, y, w, h);
 }
 
+void gl::internal::enable(unsigned name) {
+	glEnable(name);
+}
+
+void gl::internal::blend_func(unsigned source, unsigned destination) {
+	glBlendFunc(source, destination);
+}
+
 // Texture
 void gl::internal::gen_textures(unsigned n, unsigned* textures) {
 	glGenTextures(n, textures);

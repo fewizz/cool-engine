@@ -134,6 +134,48 @@ namespace gfx {
 		}*/
 	};
 
+	class rectangle_renderer : public verticies_renderer {
+		//float x, y, w, h;
+		gl::array_buffer positions;
+
+	public:
+		rectangle_renderer(float x, float y, float w, float h, std::shared_ptr<gl::program> program, gl::buffer_usage usage = gl::buffer_usage::static_draw)
+			:verticies_renderer( program )//, x{ x }, y{ y }, w{ h }, h{ h }
+		{
+			positions.data(std::vector<float>{
+				x, y,
+				x + w, y,
+				x, y + h,
+				x + w, y + h,
+			}, usage);
+			gl::vertex_attribute::location pos_loc = program->get_attrib_location("a_position");
+
+			vertex_array->attrib_pointer<float>(pos_loc, 2, positions);
+			vertex_array->enable_attrib_array(pos_loc);
+		}
+
+		rectangle_renderer(float x, float y, float w, float h, gl::program&& program, gl::buffer_usage usage = gl::buffer_usage::static_draw)
+			:rectangle_renderer(x, y, w, h, std::make_shared<gl::program>(std::move(program))) {}
+
+		rectangle_renderer(std::shared_ptr<gl::program> program)
+			:rectangle_renderer( 0, 0, 0, 0, program, gl::buffer_usage::dynamic_draw) {}
+		rectangle_renderer(gl::program&& program)
+			:rectangle_renderer(std::make_shared<gl::program>(std::move(program))) {}
+
+		void update(float x, float y, float w, float h) {
+			positions.sub_data(0, std::vector<float>{
+				x, y,
+				x + w, y,
+				x, y + h,
+				x + w, y + h,
+			});
+		}
+
+		void render() override {
+			program->draw_arrays(gl::primitive_type::triangle_strip, 0, 4, *vertex_array);
+		}
+	};
+
 	/*class textured_verticies_renderer : public verticies_renderer {
 		std::vector<std::pair<unsigned, std::shared_ptr<gl::texture>>> textures;
 

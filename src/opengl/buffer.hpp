@@ -72,10 +72,10 @@ namespace gl {
 		template<class Container>
 		void data(Container container, buffer_usage usage = buffer_usage::static_draw) {
 			bind();
-			gl::internal::buffer_data(target, sizeof(Container::value_type)*container.size(), container.data(), usage);
+			gl::internal::buffer_data(target, sizeof(Container::value_type)*(unsigned)container.size(), container.data(), usage);
 		}
 
-		void data(size_t size, buffer_usage usage = buffer_usage::static_draw) {
+		void data(unsigned size, buffer_usage usage = buffer_usage::static_draw) {
 			bind();
 			gl::internal::buffer_data(target, size, nullptr, usage);
 		}
@@ -83,7 +83,7 @@ namespace gl {
 		template<class Container>
 		void sub_data(unsigned offset, Container container) {
 			bind();
-			internal::buffer_sub_data(target, offset, sizeof(Container::value_type) * container.size(), container.data());
+			internal::buffer_sub_data(target, offset, sizeof(Container::value_type)*(unsigned)container.size(), container.data());
 		}
 	};
 

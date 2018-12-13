@@ -1,4 +1,7 @@
-#include "opengl/gl.hpp"
+#include "opengl/context.hpp"
+#include "opengl/debug.hpp"
+#include "opengl/core.hpp"
+#include <iostream>
 #include "gui.hpp"
 #include "renderer.hpp"
 #include <memory>
@@ -24,6 +27,7 @@ int main() {
 		const char* message, const void* userParam) {
 		cout << message << "\n";
 	});
+	win.swap_interval(1);
 
 	freetype::library lib;
 
