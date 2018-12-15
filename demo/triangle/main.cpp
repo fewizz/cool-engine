@@ -16,7 +16,6 @@ int main() {
 	glfw::window window = glfw::create_window(w, h, "test", { glfw::window::hints::opengl_debug_context{true} });
 	window.make_context_current();
 	gl::context c{ gl::wrap_context() };
-	//gl::internal::init();
 
 	class rend : public gfx::verticies_renderer {
 		gl::array_buffer vbo;
@@ -40,8 +39,8 @@ int main() {
 				}
 			)"}}} 
 		{
-			unsigned location = program->get_attrib_location("a_pos");
-			vertex_array->attrib_pointer<float>(location , 2, vbo);
+			unsigned location = program()->attrib_location("a_pos");
+			vertex_array->attrib_pointer<float, 2>(location, vbo);
 			vertex_array->enable_attrib_array(location);
 			vbo.data(sizeof(float) * 3 * 2, gl::buffer_usage::dynamic_draw);
 		}
@@ -53,8 +52,8 @@ int main() {
 				-w / 2.0f + 50, h / 2.0f - 50
 			});
 
-			program->uniform_mat<4, 4, float>(program->get_unifrom_location("u_mat"), 1, false, &glm::ortho(-w / 2.0f, w / 2.0f, -h / 2.0f, h / 2.0f));
-			program->draw_arrays(gl::primitive_type::triangles, 0, 3, *vertex_array);
+			program()->uniform<float, 4, 4>(program()->uniform_location("u_mat"), 1, false, &glm::ortho(-w / 2.0f, w / 2.0f, -h / 2.0f, h / 2.0f));
+			program()->draw_arrays(gl::primitive_type::triangles, 0, 3, *vertex_array);
 		}
 	} trinagle;
 

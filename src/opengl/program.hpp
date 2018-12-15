@@ -25,6 +25,7 @@ namespace gl {
 		void uniform_1i(int location, int value);
 		void uniform_1ui(int location, unsigned value);
 		void uniform_4f(int location, float f1, float f2, float f3, float f4);
+		void uniform_1iv(int location, unsigned count, const int* value);
 		void uniform_matrix_4fv(int location, unsigned count, bool transpose, const float* value);
 	}
 
@@ -93,96 +94,93 @@ namespace gl {
 		}
 
 	public:
-		void link() {
+		void link() const {
 			internal::link_program(name);
 		}
 
-		void use() {
+		void use() const {
 			internal::use_program(name);
 		}
 
-		void draw_arrays(primitive_type pt, unsigned start, unsigned count) {
+		void draw_arrays(primitive_type pt, unsigned start, unsigned count) const {
 			use();
 			internal::draw_arrays(pt, start, count);
 		}
 
-		void draw_arrays(primitive_type pt, unsigned start, unsigned count, vertex_array& vao) {
+		void draw_arrays(primitive_type pt, unsigned start, unsigned count, vertex_array& vao) const {
 			use();
 			internal::bind_vertex_array(vao.name);
 			internal::draw_arrays(pt, start, count);
 		}
 
-		unsigned get_attrib_location(std::string attrib_name) {
+		unsigned attrib_location(std::string attrib_name) const {
 			return internal::get_attribute_location(name, attrib_name.c_str());
 		}
 
-		unsigned get_unifrom_location(std::string unifrom_name) {
+		unsigned uniform_location(std::string unifrom_name) const {
 			return internal::get_uniform_location(name, unifrom_name.c_str());
 		}
-		
-		template<class T>
-		void uniform(unsigned location, T);
 
-		template<>
-		void uniform<int>(unsigned location, int value) {
+		void uniform(unsigned location, int value) const {
 			use();
 			internal::uniform_1i(location, value);
 		}
 
-		template<>
-		void uniform<unsigned>(unsigned location, unsigned value) {
+		void uniform(unsigned location, unsigned value) const {
 			use();
 			internal::uniform_1ui(location, value);
 		}
 
-		template<class T, int N>
-		void uniform(unsigned location, void* data);
-
-		template<>
-		void uniform<float, 4>(unsigned location, void* data) {
+		void uniform(unsigned location, float v1, float v2, float v3, float v4) const {
 			use();
-			float* fdata = (float*)data;
-			internal::uniform_4f(location, fdata[0], fdata[1], fdata[2], fdata[3]);
+			internal::uniform_4f(location, v1, v2, v3, v4);
 		}
 
-		template<class RAI>
-		void uniform_1uiv(unsigned location, RAI begin, RAI end) {
+		template<class T, int N, class T0>
+		void uniform(unsigned location, T0 value) const {
+			static_assert(sizeof(T)*N == sizeof(T0));
+			static_assert(N <= 4);
+
+			T* data = (T*)&value;
+
+			if constexpr (N == 1)uniform(location, data[0]);
+			if constexpr (N == 2)uniform(location, data[0], data[1]);
+			if constexpr (N == 3)uniform(location, data[0], data[2], data[3]);
+			if constexpr (N == 4)uniform(location, data[0], data[1], data[2], data[3]);
+		}
+
+		// Second type
+		template<class T, int N, class T2>
+		void uniform(unsigned location, unsigned count, const T2* data) const {
 			use();
-			uniform_1uiv(location, std::distance(begin, end), &*(begin));
+
+			if constexpr(N == 1) {
+				if constexpr (T == int)internal::uniform_1iv(location, count, data);
+				else throw std::exception();
+			}
+			else throw std::exception();
 		}
 
-		template<class Container>
-		void uniform_1uiv(unsigned location, Container container) {
-			uniform_1uiv(location, container.begin(), container.end());
-		}
-
-		template<class RAI>
-		void uniform_1iv(unsigned location, RAI begin, RAI end) {
+		// Third type
+		template<class T, int C, int R, class T2>
+		void uniform(unsigned location, unsigned count, bool transpose, const T2* value) const {
+			static_assert(C*R * sizeof(T) == sizeof(T2));
 			use();
-			uniform_1iv(location, std::distance(begin, end), &*(begin));
+
+			if constexpr (C == 4) {
+				if constexpr (R == 4) {
+					if constexpr (std::is_same_v<T, float>)internal::uniform_matrix_4fv(location, count, transpose, (T*)value);
+					else throw std::exception();
+				}
+				else throw std::exception();
+			}
+			else throw std::exception();
 		}
 
-		template<class Container>
-		void uniform_1iv(unsigned location, Container container) {
-			uniform_1iv(location, container.begin(), container.end());
+		template<class T, int C, int R, class T2>
+		void uniform(unsigned location, T2& value) const {
+			uniform<T, C, R, T2>(location, 1, false, &value);
 		}
-
-		template<int C, int R, class T>
-		void uniform_mat(unsigned location, unsigned count, bool transpose, const void* values);
-		template<int C, int R, class T>
-		void uniform_mat(unsigned location, const void* values);
-
-		template<>
-		void uniform_mat<4, 4, float>(unsigned location, unsigned count, bool transpose, const void* values) {
-			use();
-			internal::uniform_matrix_4fv(location, count, transpose, (float*)values);
-		}
-
-		template<>
-		void uniform_mat<4, 4, float>(unsigned location, const void* values) {
-			uniform_mat<4, 4, float>(location, 1, false, values);
-		}
-
 
 	};
 }

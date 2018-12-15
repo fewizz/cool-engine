@@ -92,7 +92,7 @@ public:
 	}
 
 	void render() override {
-		back.get_program()->uniform_mat<4, 4, float>(back.get_program()->get_unifrom_location("u_mat"), &glm::ortho<float>(0, ::w, 0, ::h));
+		back.program()->uniform<float, 4, 4>(back.program()->uniform_location("u_mat"), glm::ortho<float>(0, ::w, 0, ::h));
 		back.update(0, 0, ::w, ::h);
 		back.render();
 		start.render();

@@ -46,8 +46,9 @@ namespace gl {
 			internal::shader_source(name, 1, &c_str, nullptr);
 		}
 
-		void compile() {
+		shader& compile() {
 			internal::compile_shader(name);
+			return *this;
 		}
 	};
 	class vertex_shader : public shader {

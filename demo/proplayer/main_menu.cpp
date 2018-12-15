@@ -43,7 +43,7 @@ main_menu_button::main_menu_button(float x, float y, float w, float h, freetype:
 				out vec4 color;
 
 				void main() {
-					color = vec4(1, 0, 0, 1);
+					color = vec4(1, gl_FragCoord.x / 500.0, 0, 0.4);
 				}
 			)"}
 		});
@@ -87,16 +87,16 @@ main_menu_button::main_menu_button(float x, float y, float w, float h, freetype:
 
 void main_menu_button::render() {
 	mat4 mat{ ortho(0.0f, (float)::w, -::h / 2.0f, ::h / 2.0f) };
-	rectangle_program->uniform_mat<4, 4, float>(rectangle_program->get_unifrom_location("u_mat"), &mat);
+	rectangle_program->uniform<float, 4, 4>(rectangle_program->uniform_location("u_mat"), mat);
 	rectangle_renderer->render();
 
 	mat = translate(mat, { x + (w - text_renderer->get_width()) / 2, y + 15, 0 });
-	text_program->uniform_mat<4, 4, float>(text_program->get_unifrom_location("u_mat"), &mat);
-	text_program->uniform<float, 4>(text_program->get_unifrom_location("u_color"), &glm::vec4(0, 0, 0, 1));
+	text_program->uniform<float, 4, 4>(text_program->uniform_location("u_mat"), mat);
+	text_program->uniform<float, 4>(text_program->uniform_location("u_color"), vec4{ 0, 0, 0, 1 });
 	text_renderer->render();
 
 	mat = translate(mat, { 2, 2, 0 });
-	text_program->uniform_mat<4, 4, float>(text_program->get_unifrom_location("u_mat"), &mat);
-	text_program->uniform<float, 4>(text_program->get_unifrom_location("u_color"), &glm::vec4(1, 1, 1, 1));
+	text_program->uniform<float, 4, 4>(text_program->uniform_location("u_mat"), mat);
+	text_program->uniform<float, 4>(text_program->uniform_location("u_color"), vec4{ 1, 1, 1, 1 });
 	text_renderer->render();
 }

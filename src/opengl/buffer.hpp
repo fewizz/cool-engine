@@ -51,7 +51,7 @@ namespace gl {
 	public:
 		~buffer() {
 			if (name != invalid_name) {
-				gl::internal::delete_buffers(1, &name);
+				internal::delete_buffers(1, &name);
 				invalidate_name();
 			}
 		}
@@ -59,25 +59,28 @@ namespace gl {
 		size_t size() {
 			bind();
 			int size;
-			gl::internal::get_buffer_parameteriv(target, 0x8764, &size);
+			internal::get_buffer_parameteriv(target, 0x8764, &size);
 			return size;
 		}
 
 		template<class RAI>
 		void data(RAI begin, RAI end, gl::buffer_usage usage = gl::buffer_usage::static_draw) {
 			bind();
-			gl::internal::buffer_data(target, std::distance(begin, end) * sizeof(std::iterator_traits<RAI>::value_type), &*begin, usage);
+			internal::buffer_data(target, std::distance(begin, end) * sizeof(std::iterator_traits<RAI>::value_type), &*begin, usage);
 		}
 
 		template<class Container>
-		void data(Container container, buffer_usage usage = buffer_usage::static_draw) {
+		std::enable_if_t<std::is_class_v<Container>>
+		data(Container container, buffer_usage usage = gl::buffer_usage::static_draw) {
 			bind();
-			gl::internal::buffer_data(target, sizeof(Container::value_type)*(unsigned)container.size(), container.data(), usage);
+			internal::buffer_data(target, sizeof(Container::value_type)*(unsigned)container.size(), container.data(), usage);
 		}
 
-		void data(unsigned size, buffer_usage usage = buffer_usage::static_draw) {
+		template<class size_t_>
+		std::enable_if_t<std::is_integral_v<size_t_>>
+		data(size_t_ size, buffer_usage usage) {
 			bind();
-			gl::internal::buffer_data(target, size, nullptr, usage);
+			internal::buffer_data(target, size, nullptr, usage);
 		}
 
 		template<class Container>

@@ -19,14 +19,12 @@ int w = 800;
 int h = 600;
 
 int main() {
-	glfw::window win = glfw::create_window(800, 600, "Pro Player Simulator", { glfw::window::hints::opengl_debug_context{ true } });
+	glfw::window win = glfw::create_window(w, h, "Pro Player Simulator", { glfw::window::hints::opengl_debug_context{ true } });
 	win.make_context_current();
 
 	gl::context glc = wrap_context();
-	debug_message_callback([](message_source source, message_type type, unsigned id, message_severity severity, unsigned length,
-		const char* message, const void* userParam) {
-		cout << message << "\n";
-	});
+	debug_message_callback([](string message) { cout << message << "\n"; });
+
 	win.swap_interval(1);
 
 	freetype::library lib;
@@ -40,9 +38,7 @@ int main() {
 
 	while (!win.should_close())
 	{
-		auto [w, h] = win.get_framebuffer_size();
-		::w = w;
-		::h = h;
+		std::tie(w, h) = win.get_framebuffer_size();
 
 		viewport(0, 0, w, h);
 		clear(clear_buffer::color);

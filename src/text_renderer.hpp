@@ -16,21 +16,21 @@ namespace gfx {
 		gfx::fixed_texture_atlas tex_atlas;
 		std::string text;
 		std::vector<int> textures_array_texture_units;
-		std::vector<gl::array_buffer> buffers;
-		float width = 0;
+		gl::array_buffer positions;
+		gl::array_buffer uvs;
+		float width;
+		size_t chars;
+		unsigned atlas_loc;
 
 		static int calculate_max_size(freetype::face& face) {
 			freetype::bbox global_box{ face.get_bbox() };
-			unsigned side_size = std::max(global_box.x_max - global_box.x_min, global_box.y_max - global_box.y_min);
-			return (unsigned) ceil(side_size / 64.0);
+			return std::max(global_box.x_max - global_box.x_min, global_box.y_max - global_box.y_min) / 64 + 1;
 		}
 	public:
-		//text_renderer(std::string str, freetype::face& face, gl::program& program)
-		//	:text_renderer(str, face, std::make_shared{program}) {}
-
-
 		text_renderer(std::string str, freetype::face& face, std::shared_ptr<gl::program> program)
-			:verticies_renderer(program), text{ str }, tex_atlas{ calculate_max_size(face), 30 } {
+			:verticies_renderer(program), text{ str }, tex_atlas{ calculate_max_size(face), 30 },
+			chars{ str.size() }, atlas_loc{program->uniform_location("a_position")}
+		{
 			tex_atlas.mag_filter(gl::mag_filter::nearest);
 			tex_atlas.min_filter(gl::min_filter::nearest);
 
@@ -45,7 +45,8 @@ namespace gfx {
 			float scaleX = 1.0 / 64.0;
 			float scaleY = 1.0 / 64.0;
 
-			for (auto begin = str.begin(); begin != str.end();) {
+			auto begin = str.begin();
+			while(begin != str.end()) {
 				uint32_t code_point = utf8::next(begin, str.end());
 
 				if (code_point == '\n') {
@@ -53,11 +54,17 @@ namespace gfx {
 					penX = 0;
 					continue;
 				}
+
 				face.load_glyph(face.get_char_index(code_point));
 				freetype::glyph_slot glyph{ face.get_glyph() };
-				auto bitmap = glyph.get_bitmap();
-
 				freetype::glyph_slot::metrics metrics = glyph.get_metrics();
+
+				if (metrics.height() == 0 && metrics.width() == 0) {
+					penX += metrics.horizontal_advance();
+					continue;
+				}
+
+				auto bitmap = glyph.get_bitmap();
 
 				float left = (penX + metrics.horizontal_bearing_x()) * scaleX;
 				float right = (penX + metrics.horizontal_bearing_x() + metrics.width()) * scaleX;
@@ -88,10 +95,6 @@ namespace gfx {
 							data[(x + y * w) * 4 + 3] = c;
 						}
 					}
-					if (data.size() == 0) {
-						data.insert(data.end(), { 0, 0, 0, 0 });
-						w = h = 1;
-					}
 
 					std::pair<unsigned, unsigned> right_bot = tex_atlas.add(w, h, data.data());
 					char_uv[code_point] = right_bot;
@@ -110,28 +113,31 @@ namespace gfx {
 						x+w, y,
 						x, y+h,
 						x+w, y,
-						x, y
+						x, y,
 					});
 
 				penX += metrics.horizontal_advance();
 			}
+
+			this->positions.data(positions);
+			this->uvs.data(uvs);
+
 			width = penX * scaleX;
-
-			buffers.push_back(gl::array_buffer(positions));
-			vertex_array->attrib_pointer<float>(program->get_attrib_location("a_position"), gl::vertex_attribute::size{ 2 }, buffers.back());
-			vertex_array->enable_attrib_array(program->get_attrib_location("a_position"));
-
-			buffers.push_back(gl::array_buffer(uvs));
-			vertex_array->attrib_pointer<float>(program->get_attrib_location("a_uv"), gl::vertex_attribute::size{ 2 }, buffers.back());
-			vertex_array->enable_attrib_array(program->get_attrib_location("a_uv"));
 		}
 
 		void render() override {
 			gl::enable_blending();
 			gl::blend_func(gl::blending_factor::src_alpha, gl::blending_factor::one_minus_src_alpha);
 			gl::active_texture(tex_atlas, 0);
-			program->uniform<int>(program->get_unifrom_location("u_atlas"), 0);
-			program->draw_arrays(gl::primitive_type::triangles, 0, 6 * (unsigned)text.length(), *vertex_array);
+			program()->uniform<int, 1>(program()->uniform_location("u_atlas"), 0);
+
+			vertex_array->attrib_pointer<float, 2>(program()->attrib_location("a_position"), positions);
+			vertex_array->enable_attrib_array(program()->attrib_location("a_position"));
+
+			vertex_array->attrib_pointer<float, 2>(program()->attrib_location("a_uv"), uvs);
+			vertex_array->enable_attrib_array(program()->attrib_location("a_uv"));
+
+			program()->draw_arrays(gl::primitive_type::triangles, 0, 6 * chars, *vertex_array);
 		}
 
 		float get_width() {

@@ -2,8 +2,8 @@
 
 namespace gl {
 	namespace internal {
-		thread_local std::function<void(std::string message)> callback_message;
-		thread_local std::function<void(message_type type, std::string message)> callback_message_with_type;
+		static std::function<void(std::string message)> callback_message;
+		static std::function<void(message_type type, std::string message)> callback_message_with_type;
 	}
 }
 
